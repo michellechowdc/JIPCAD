@@ -48,6 +48,12 @@ mesh pyramid
   face fya (vz vy va)  surface G  endface
   face fab (vz va vb)  surface B  endface
 endmesh
-instance ipyramid pyramid  endinstance
+### instance ipyramid pyramid  endinstance
+
+merge merge_pyramid
+    instance ipyramid pyramid  endinstance
+endmerge
+instance imerge_pyramid merge_pyramid facenormal 1.0 endinstance
+
 
 ###########################  END  ###############################

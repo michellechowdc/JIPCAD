@@ -49,6 +49,7 @@ merge merge_slab
 endmerge
 
 instance imerge_slab merge_slab endinstance
+### instance imerge_slab merge_slab facenormal 1.0 vertexnormal 1.0 endinstance
 
 ### calling offset in code should work
 
