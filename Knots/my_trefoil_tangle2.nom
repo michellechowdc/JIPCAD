@@ -1,0 +1,118 @@
+# my_trefoil_tangle2.nom
+# much cleaner code, but annoying bc only in first quadrant, i should make it all centered at 0
+# 
+# Michelle CHow  2024/11/7
+#####################################################
+
+##############  surface colors   ########################### 
+surface W   color (0.9 0.9 0.9) endsurface   # White
+surface D   color (0.6 0.6 0.6) endsurface   # Dark
+surface K   color (0   0   0  ) endsurface   # blacK
+
+surface O  color  (0.9 0.3 0  ) endsurface   # Orange
+surface R  color  (1   0.1 0  ) endsurface   # Red
+surface G  color  (0   0.9 0  ) endsurface   # Green
+surface B  color  (0   0.3 1  ) endsurface   # Blue
+
+backgroundcolor (0.6 0.7 0.8) endbackgroundcolor 
+
+###################  Coordinate axes  ######################
+point ooo  ( 0 0 0 ) endpoint 
+point xoo  ( 1 0 0 ) endpoint
+point oyo  ( 0 1 0 ) endpoint
+point ooz  ( 0 0 1 ) endpoint
+
+polyline xaxis (ooo xoo) endpolyline
+polyline yaxis (ooo oyo) endpolyline
+polyline zaxis (ooo ooz) endpolyline
+
+group coord_axes   
+  instance ix xaxis surface R   endinstance     
+  instance iy yaxis surface B   endinstance
+  instance iz zaxis surface G   endinstance
+endgroup
+
+instance  icax  coord_axes   endinstance
+
+#####################  adjustable parameters  #################
+bank p  
+    # adjust radius of crosssections for sweep paths
+    set tet_thickness    0.01   0.01  1   0.01    # more specifically, adjust radius of control sweep used for tetrahedron path
+    set tref_thickness    0.14    0.01  1   0.01    # radius of control sweep used for trefoil sweep path
+
+    # adjust number of spline segments used for sweep path, aka more segments means smoother sweep
+    set spline_seg    60     24   600  12
+
+    # adjust coordinates of trefoil sweep path
+    set tref_middleCoord 1  0.1 5  0.1
+    set tref_cornerCoord 1  0.1 5  0.1 
+    set tref_width  0.5  0.05 1  0.01
+
+    # experimenting to orient the new trefoils now
+    # rotate itself about z axis
+    ###try this first, but understand his tetra tangle example
+    set trefxy_rotz  0   -360 360 1
+
+    list ( tet_thickness tref_thickness   spline_seg   tref_middleCoord tref_cornerCoord tref_width   trefxy_rotz )
+endbank
+
+#####################  wire cube  #################
+point Yxyz  ( 4  4  4 ) endpoint
+point Yxyc  ( 4  4  0 ) endpoint
+point Yxbc  ( 4 0 0 ) endpoint
+point Yayz  (0  4  4 ) endpoint
+
+polyline edge3  (Yxbc Yxyc Yxyz Yayz) endpolyline
+#instance line edge3 surface D endinstance
+
+group wcube
+  instance ie1 edge3       endinstance
+  instance ie2 edge3   rotate(0 0 1)(90) translate (4 0 0)  endinstance
+  instance ie3 edge3   rotate(0 0 1)(180) translate (4 4 0)  endinstance
+  instance ie4 edge3   rotate(0 0 1)(270) translate (0 4 0)  endinstance
+endgroup
+
+instance icube wcube  surface D endinstance 
+
+#####################  tetrahedron frame  #################
+point t1 (0 0 0) endpoint
+point t2 (4 0 0) endpoint
+point t3 (2 3.464 0) endpoint
+point t4 (2 1.155 3.266) endpoint
+
+polyline tetrahedronPath (t1 t2 t3 t1 t4 t3 t2 t4) endpolyline
+#instance itet tetrahedronPath surface k endinstance 
+
+circle ctprof  ( {expr $p.tet_thickness}  3 )  endcircle
+sweep tetworm  crosssection  ctprof  endcrosssection  path tetrahedronPath  mintorsion  endpath   endsweep
+
+instance tetInst tetworm endinstance
+
+#####################  equilateral trefoil  #################
+##### side length of 4
+point ec1 (0 0 0) endpoint
+point ec2 ({expr 4*$p.tref_cornerCoord} 0 0) endpoint
+point ec3 ({expr 2*$p.tref_cornerCoord} {expr 3.464101615137*$p.tref_cornerCoord} 0) endpoint
+
+point em1f ({expr 2*$p.tref_middleCoord} 0 {expr $p.tref_width}) endpoint
+point em1b ({expr 2*$p.tref_middleCoord} 0 {expr -1*$p.tref_width}) endpoint
+point em2f ({expr 3*$p.tref_middleCoord} {expr 1.73205080756*$p.tref_middleCoord} {expr $p.tref_width}) endpoint
+point em2b ({expr 3*$p.tref_middleCoord} {expr 1.73205080756*$p.tref_middleCoord} {expr -1*$p.tref_width}) endpoint
+point em3f ({expr 1*$p.tref_middleCoord} {expr 1.73205080756*$p.tref_middleCoord} {expr $p.tref_width}) endpoint
+point em3b ({expr 1*$p.tref_middleCoord} {expr 1.73205080756*$p.tref_middleCoord} {expr -1*$p.tref_width}) endpoint
+
+bspline  trefpath  order 4  (ec1 em1f em2b ec3 em3f em1b ec2 em2f em3b    ec1 em1f em2b)  segs {expr $p.spline_seg}   endbspline
+
+circle bsprof  ( {expr $p.tref_thickness}  9 )  endcircle
+sweep trefworm  crosssection  bsprof  endcrosssection    path trefpath  mintorsion  endpath   endsweep
+
+instance trefInst trefworm endinstance
+
+#####################  trying trefoil tangle now #################
+group tangle
+  instance il1 trefworm  surface B  endinstance   
+  instance il2 trefworm  surface R  rotate(2 1.73205080757 1)({expr $p.trefxy_rotz}) endinstance   
+  #instance il2 trefworm  surface R  rotate(0 0 1)({expr $p.trefxy_rotz}) endinstance   
+endgroup
+
+instance itan tangle endinstance

@@ -1,0 +1,119 @@
+###########################  
+# my_soapy_3ring.nom
+# 
+# Michelle Chow  2024/12/05
+#####################################################
+
+##############  surface colors   ########################### 
+
+surface M  color  (0.9 0.1 1  ) endsurface   # Magenta
+surface Z  color  (1   0   0.6) endsurface   # Zinnober
+surface R  color  (0.9 0.1 0  ) endsurface   # Red
+surface O  color  (1   0.6 0  ) endsurface   # Orange
+surface Y  color  (0.8 0.8 0  ) endsurface   # Yellow
+surface L  color  (0.5 0.8 0  ) endsurface   # Lime
+surface G  color  (0.1 0.8 0  ) endsurface   # Green
+surface A  color  (0   0.9 0.6) endsurface   # Aqua
+surface C  color  (0   0.8 0.9) endsurface   # Cyan
+surface U  color  (0   0.6 1  ) endsurface   # Uniform
+surface B  color  (0   0.3 1  ) endsurface   # Blue
+surface V  color  (0.5 0.1 1  ) endsurface   # Violet
+surface P  color  (0.7 0   0.9) endsurface   # Purple
+
+surface W  color  (1   1   1  ) endsurface   # White
+surface D  color  (0.2 0.2 0.2) endsurface   # Dark
+surface K  color  (0   0   0  ) endsurface   # blacK
+
+backgroundcolor (0.6 0.7 0.8) endbackgroundcolor 
+
+###################  Coordinate axes  ######################
+
+point ooo  ( 0 0 0 ) endpoint 
+point xoo  ( 1 0 0 ) endpoint
+point oyo  ( 0 1 0 ) endpoint
+point ooz  ( 0 0 1 ) endpoint
+
+polyline xaxis (ooo xoo) endpolyline
+polyline yaxis (ooo oyo) endpolyline
+polyline zaxis (ooo ooz) endpolyline
+
+group coord_axes   
+  instance ix xaxis surface R   endinstance     
+  instance iy yaxis surface B   endinstance
+  instance iz zaxis surface G   endinstance
+endgroup
+
+instance  icax  coord_axes   endinstance
+
+########################   Params   ##################################
+bank p  
+    set ctrad    0.08   0.01   1   0.01    # "radius of profile sweep"
+    set sprad    5         5  20   1    # "radius of circular sweep path"
+
+    set bseg     25     5   100  5       # "number of spline-segments"
+
+    set trans     4     0   100  1       # "translate in x"
+    set rot       10   0   360  1       # "rotate about x"
+
+    set bigRad    7         5  20   1    # "radius of circular sweep path for bigger inner circle"
+
+    list (ctrad sprad    bseg    trans rot bigRad)
+endbank
+
+########################   Plot the Circles   ##################################
+# 1. circle sweep path
+# 2. smaller circle sweep profile
+
+circle ctprof  ( {expr $p.ctrad}  3 )  endcircle
+circle bsprof  ( {expr $p.sprad}  {expr $p.bseg} )  endcircle
+sweep ring  crosssection  ctprof  endcrosssection    path bsprof  mintorsion  endpath   endsweep
+
+circle bigprof  ( {expr $p.bigRad}  {expr $p.bseg} )  endcircle
+sweep bigRing  crosssection  ctprof  endcrosssection    path bigprof  mintorsion  endpath   endsweep
+
+instance iR1 bigRing surface D endinstance  
+instance iR2 ring surface W translate({expr $p.trans} 0 0) rotate(1 0 0)({expr $p.rot}) endinstance
+instance iR3 ring surface V translate({expr $p.trans} 0 0) rotate(1 0 0)({expr $p.rot}) rotate(0 0 1)(120) endinstance
+instance iR4 ring surface A translate({expr $p.trans} 0 0) rotate(1 0 0)({expr $p.rot}) rotate(0 0 1)(240) endinstance
+   
+###########################    Manually add faces    ###########################   
+mesh TempMesh0 
+    face new0 ( .iR4.v5_1 .iR1.v20_1 .iR1.v19_1 .iR4.v4_1 ) endface 
+    face new1 ( .iR4.v3_1 .iR1.v19_1 .iR1.v18_1 .iR4.v2_1 ) endface 
+    face new2 ( .iR4.v1_1 .iR1.v18_1 .iR1.v17_1 .iR4.v25_1 ) endface 
+    face new3 ( .iR4.v24_1 .iR1.v17_1 .iR1.v16_1 .iR4.v23_1 ) endface 
+    face new4 ( .iR4.v22_1 .iR1.v16_1 .iR1.v15_1 .iR4.v21_1 ) endface 
+    face new5 ( .iR4.v20_1 .iR1.v15_1 .iR1.v14_1 .iR4.v19_1 ) endface 
+
+    face new0 ( .iR4.v19_2 .iR1.v13_2 .iR4.v18_2 ) endface 
+    face new1 ( .iR1.v13_1 .iR3.v8_1 .iR4.v18_1 ) endface 
+
+    face new0 ( .iR3.v9_1 .iR4.v17_1 .iR4.v18_1 ) endface 
+    face new1 ( .iR3.v10_1 .iR4.v16_1 .iR4.v17_0 ) endface 
+    face new2 ( .iR3.v11_1 .iR4.v15_1 .iR4.v16_1 ) endface 
+
+    face new0 ( .iR3.v12_1 .iR2.v13_1 .iR3.v11_1 ) endface 
+    face new1 ( .iR3.v12_1 .iR2.v15_0 .iR2.v14_0 ) endface 
+    face new2 ( .iR4.v12_2 .iR2.v16_2 .iR2.v15_2 ) endface 
+    face new3 ( .iR4.v11_2 .iR2.v17_2 .iR2.v16_2 ) endface 
+    face new4 ( .iR4.v10_2 .iR2.v18_2 .iR2.v17_0 ) endface 
+    face new5 ( .iR4.v9_2 .iR2.v19_2 .iR2.v18_0 ) endface 
+    face new6 ( .iR2.v19_0 .iR1.v22_0 .iR2.v20_0 ) endface 
+
+    face new0 ( .iR1.v23_0 .iR2.v21_0 .iR2.v20_0 ) endface 
+    face new1 ( .iR1.v24_2 .iR2.v22_2 .iR2.v21_0 ) endface 
+    face new2 ( .iR1.v25_2 .iR2.v24_2 .iR2.v23_2 .iR1.v24_2 ) endface 
+    face new3 ( .iR1.v1_2 .iR2.v1_2 .iR2.v25_2 .iR1.v25_2 ) endface 
+    face new4 ( .iR1.v2_2 .iR2.v3_2 .iR2.v2_2 .iR1.v1_2 ) endface 
+    face new5 ( .iR1.v3_2 .iR2.v4_2 .iR1.v2_2 ) endface 
+    face new6 ( .iR1.v3_2 .iR2.v6_2 .iR2.v5_2 ) endface 
+
+    face new0 ( .iR2.v6_2 .iR1.v4_1 .iR2.v7_2 ) endface 
+    face new1 ( .iR2.v7_2 .iR1.v5_2 .iR2.v8_2 ) endface 
+
+    face new0 ( .iR2.v8_1 .iR1.v6_1 .iR2.v9_1 ) endface 
+    face new1 ( .iR2.v9_1 .iR3.v20_0 .iR3.v19_0 ) endface face new2 ( .iR2.v9_2 .iR3.v18_0 .iR2.v10_2 ) endface 
+    face new3 ( .iR2.v10_2 .iR3.v17_2 .iR2.v11_2 ) endface face new4 ( .iR2.v11_2 .iR3.v16_2 .iR2.v12_2 ) endface 
+endmesh
+
+instance instTempMesh0 TempMesh0 endinstance

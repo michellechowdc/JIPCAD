@@ -1,0 +1,131 @@
+#
+# Trefoil-Demo_.nom
+#  
+# This is a sructural template for the layout of simple JIPCAD programs
+#
+# CHS 2024/09/24
+
+###########  Some Surface colors  #############################
+surface M  color  (0.9 0.1 1  ) endsurface   # Magenta
+surface Z  color  (1   0   0.6) endsurface   # Zinnober
+surface R  color  (0.9 0.1 0  ) endsurface   # Red
+surface O  color  (1   0.6 0  ) endsurface   # Orange
+surface Y  color  (0.8 0.8 0  ) endsurface   # Yellow
+surface L  color  (0.5 0.8 0  ) endsurface   # Lime
+surface G  color  (0.1 0.8 0  ) endsurface   # Green
+surface A  color  (0   0.9 0.6) endsurface   # Aqua
+surface C  color  (0   0.8 0.9) endsurface   # Cyan
+surface U  color  (0   0.6 1  ) endsurface   # Uniform
+surface B  color  (0   0.3 1  ) endsurface   # Blue
+surface V  color  (0.5 0.1 1  ) endsurface   # Violet
+surface P  color  (0.7 0   0.9) endsurface   # Purple
+
+surface W  color  (1   1   1  ) endsurface   # White
+surface S  color  (0.8 0.8 0.8) endsurface   # Snow
+surface D  color  (0.2 0.2 0.2) endsurface   # Dark
+surface K  color  (0   0   0  ) endsurface   # blacK
+
+backgroundcolor (0.7 0.8 0.9)  endbackgroundcolor 
+
+
+######  Coordinate System  #############################
+
+point ooo (0 0 0) endpoint
+point xoo (1 0 0) endpoint
+point oyo (0 1 0) endpoint
+point ooz (0 0 1) endpoint
+
+polyline xax ( ooo xoo ) endpolyline
+polyline yax ( ooo oyo ) endpolyline
+polyline zax ( ooo ooz ) endpolyline
+
+group coord_axes
+    instance ixax xax  surface R  endinstance
+    instance iyax yax  surface B  endinstance
+    instance izax zax  surface G  endinstance
+endgroup
+
+ instance ica  coord_axes  scale(1.2 1.2 1.2)  endinstance
+
+
+##############  generic  CUBE  outline  #####################
+
+point 	XYZ (  1.0   1.0   1.0 ) endpoint
+point 	XBZ (  1.0  -1.0   1.0 ) endpoint
+point 	AYZ ( -1.0   1.0   1.0 ) endpoint
+point 	ABZ ( -1.0  -1.0   1.0 ) endpoint
+point 	XYC (  1.0   1.0  -1.0 ) endpoint
+point 	XBC (  1.0  -1.0  -1.0 ) endpoint
+point 	AYC ( -1.0   1.0  -1.0 ) endpoint
+point 	ABC ( -1.0  -1.0  -1.0 ) endpoint
+
+polyline edge3 (XBC XYC XYZ AYZ) endpolyline
+
+group cubeF
+  instance ie1  edge3       endinstance
+  instance ie2  edge3   rotate(0 0 1)(90)   endinstance
+  instance ie3  edge3   rotate(0 0 1)(180)   endinstance
+  instance ie4  edge3   rotate(0 0 1)(270)   endinstance
+endgroup
+
+ instance icF  cubeF  surface U  scale(0.7 0.7 0.7)  endinstance  
+
+
+############  Adjustable Parameters on Sliders  ##################################
+
+bank p
+   set radi      1.5     0.1     2    0.1    ## radius - inner points
+   set rado      3       1       5    0.1    ## radius - outer points
+   set wida     25      10      40    1      ## width-angle
+   set dz        1       0       3    0.1    ## delta z, crossover separation
+   set twst      0    -180     180    1      ## overall twist for end alignments
+   set segC     60      60      60    3      ## segments in curve.  Changing this value messes up the hand-picked facets.
+
+   list ( radi  rado  wida  dz   segC  ) 
+endbank
+
+
+################################  trefoil path  ####################################
+
+point pa  ( {expr  $p.radi}        0                      0 ) endpoint
+point pb  ( {expr  $p.rado*cos(0.01745*(120-$p.wida))}  {expr $p.rado*sin(0.01745*(120-$p.wida))}  {expr  $p.dz} ) endpoint
+point pc  ( {expr  $p.rado*cos(0.01745*(120+$p.wida))}  {expr $p.rado*sin(0.01745*(120+$p.wida))}  {expr -$p.dz} ) endpoint
+
+point pd  ( {expr $p.radi*cos(0.01745*240)}  {expr $p.radi*sin(0.01745*240)}  0 ) endpoint
+point pe  ( {expr  $p.rado*cos(0.01745*(0-$p.wida))}  {expr $p.rado*sin(0.01745*(0-$p.wida))}  {expr  $p.dz} ) endpoint
+point pf  ( {expr  $p.rado*cos(0.01745*(0+$p.wida))}  {expr $p.rado*sin(0.01745*(0+$p.wida))}  {expr -$p.dz} ) endpoint
+
+point pg  ( {expr $p.radi*cos(0.01745*120)}  {expr $p.radi*sin(0.01745*120)}  0 ) endpoint
+point ph  ( {expr  $p.rado*cos(0.01745*(240-$p.wida))}  {expr $p.rado*sin(0.01745*(240-$p.wida))}  {expr  $p.dz} ) endpoint
+point pi  ( {expr  $p.rado*cos(0.01745*(240+$p.wida))}  {expr $p.rado*sin(0.01745*(240+$p.wida))}  {expr -$p.dz} ) endpoint
+
+
+polyline control  ( pa pb pc pd pe pf pg ph pi pa )  endpolyline
+instance ictrl control   surface M   scale(0.3 0.3 0.3)  endinstance
+
+bspline trefoil  order 4  ( pi  pa pb pc pd pe pf pg ph pi pa  pb )   
+  segs {expr $p.segC}
+endbspline
+instance itref trefoil   surface D   scale(0.3 0.3 0.3)  endinstance
+
+   
+#########  Some facets added interactively by connecting selected vertices ########
+   
+mesh TempMesh0    ## One third of the whole thing:
+  face newx ( .itref.v3  .itref.v2  .itref.v35 .itref.v37 )  surface B  endface 
+  face newy ( .itref.v2  .itref.v1  .itref.v33 .itref.v35 )  surface C  endface 
+  face newz ( .itref.v1  .itref.v0  .itref.v30 .itref.v33 )  surface L  endface 
+  face newa ( .itref.v0  .itref.v59 .itref.v27 .itref.v30 )  surface Y  endface 
+  face newb ( .itref.v59 .itref.v58 .itref.v25 .itref.v27 )  surface O  endface 
+  face newc ( .itref.v58 .itref.v57 .itref.v23 .itref.v25 )  surface R  endface 
+endmesh
+
+instance instTempMesh0a TempMesh0 endinstance
+instance instTempMesh0b TempMesh0 rotate(0 0 1)(120)  endinstance
+instance instTempMesh0c TempMesh0 rotate(0 0 1)(240)  endinstance
+
+
+##############################  END  ################################################
+
+
+

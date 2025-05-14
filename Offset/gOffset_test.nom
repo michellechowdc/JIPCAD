@@ -1,0 +1,93 @@
+####  gOffset_test.nom  ##########################
+##  A simple geometry to demonstrate and test global (pull-down menue) offsetting.
+##  Much of the geometry construction works in JIPCAD-3.0.077,  .98,  158,  150,  160,   
+#    e.g., calculating the averaged face-normal-vector;
+#    and the proper offsetting of inner and outer surfaces at proper offset;
+#    generating the outer edge-quads that connect inner and outer surfaces,
+
+#>>>>  Difficulties with the current global program:
+##  It always produces a "grid" structue, -- not just simple slabs.
+##  It does not take all the needed offset-parameters.
+##  The thickness and the width of the beams can be set by changing the value in the pull-down "offset" menu, e.g., 0.1 --> 0.3
+##> In some JIPCAD version, one needs to change/click that value twice before it works.
+##> Concave fave vertices get their face-normals in wrong direction! -- Perhaps use a good formula for calculating an overall face normal ?
+
+
+##  First, make this nom-file work with different offset-thicknesses, -- with no holes in the ("grid") faces ("width = 0").
+#   Then also make it work with holes in the faces ( 0 < width < 1 ).
+
+###  CHS 2025/1/25
+
+#####################################################
+
+surface R color (1 0 0) endsurface     # Red
+surface O color (0.9 0.6 0) endsurface # Orange
+surface Y color (1 1 0) endsurface     # Yellow
+surface L color (0.6 0.8 0) endsurface # Lime
+surface G color (0 0.9 0) endsurface   # Green
+surface A color (0 0.9 0.7) endsurface # Aqua
+surface C color (0 1 1) endsurface     # Cyan
+surface U color (0 0.5 1) endsurface   # Uniform
+surface B color (0 0 1) endsurface     # Blue
+surface P color (0.6 0 1) endsurface   # Purple
+surface M color (1 0 1) endsurface     # Magenta
+surface Z color (1 0 0.5) endsurface   # Zinnober
+
+surface W color (1 1 1) endsurface       # White
+surface D color (0.4 0.4 0.4) endsurface # Dark
+
+## These may be referenced by the offset module:
+surface oSurfOuter  color (0 0.9 0) endsurface   # Green
+surface oSurfInner  color (0 0 1) endsurface     # Blue
+surface oSurfEdges  color (1 0 0.5) endsurface   # Zinnober
+
+
+###############  Various parameters  ###########
+bank p
+  set tz         1     0    3    0.1   ##  "height of the pyramid tip"
+  set ty         0    -0.5  0.5  0.1   ##  "shift peak in y"
+  set tx         0    -0.5  0.5  0.1   ##  "shift peak in x"
+  set so         1     0    2    0.1   ##  "shift concave vertex in x b "
+  set zbot      -1    -2    0    0.1   ##  "z-height of bot plate"
+
+(*
+  set halfthick  0.3   0.01 0.4  0.01  ##  "amount of offsetting"
+  set oThick     0.05  0.01 0.4  0.01  ##  "amount of offsetting"
+  set oWidth     0.2   0.1  0.7  0.1   ##  "width of the gridded struts"
+  list ( tz ty tx zbot )     ##  oThick  oWidth   halfthick  )
+*)
+  list ( tz ty tx so zbot )
+endbank
+
+########>>>  Rerun the entire nom-code after any change in slider values!
+
+
+###############  some simple geometry  #####################################
+mesh pyramid
+
+  point bx  ( 2  0   {expr $p.zbot} ) endpoint
+  point by  ( 0  2   {expr $p.zbot} ) endpoint
+  point ba  (-2  0   {expr $p.zbot} ) endpoint
+  point bb  ( 0 -2   {expr $p.zbot} ) endpoint
+  point bo  ( {expr  $p.so}  {expr -$p.so}  {expr $p.zbot} ) endpoint
+
+ face bottom (by  bx    bb  ba   )  surface C  endface
+# face bottom (by  bx  bo  bb  ba   )  surface C  endface
+
+  point vx  ( 2  0  0 ) endpoint
+  point vy  ( 0  2  0 ) endpoint
+  point va  (-2  0  0 ) endpoint
+  point vb  ( 0 -2  0 ) endpoint
+  point vz  ( {expr  $p.tx} {expr  $p.ty} {expr  $p.tz} ) endpoint
+
+ face fxy (vz vx vy)  surface R  endface  ## pyr-faces
+ face fya (vz vy va)  surface G  endface
+ face fab (vz va vb)  surface B  endface
+#  face fbx (vz vb vx)  surface Y  endface
+
+endmesh
+
+instance ipyramid pyramid  endinstance
+
+
+###########################  END  ###############################

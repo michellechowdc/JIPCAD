@@ -1,0 +1,68 @@
+
+#############  __centro5.nom  ##########################
+#
+#  A simple test for finding the centroid among 5 points
+
+###  CHS 2025/1/25
+
+###    ##################################################
+
+surface R color (1 0 0) endsurface     # Red
+surface O color (0.9 0.6 0) endsurface # Orange
+surface Y color (1 1 0) endsurface     # Yellow
+surface L color (0.6 0.8 0) endsurface # Lime
+surface G color (0 0.9 0) endsurface   # Green
+surface A color (0 0.9 0.7) endsurface # Aqua
+surface C color (0 1 1) endsurface     # Cyan
+surface U color (0 0.5 1) endsurface   # Uniform
+surface B color (0 0 1) endsurface     # Blue
+surface P color (0.6 0 1) endsurface   # Purple
+surface M color (1 0 1) endsurface     # Magenta
+surface Z color (1 0 0.5) endsurface   # Zinnober
+
+surface W color (1 1 1) endsurface       # White
+surface D color (0.4 0.4 0.4) endsurface # Dark
+
+###############  Various parameters  ###########
+bank p
+  set p2x        -1    -2    0    0.1   ##  "move corner p2"
+  set p2y         1     0    2    0.1   ## 
+  set p2z         0    -1    1    0.1   ##  
+  set p5x         1     0.5  2    0.1   ##  "shift concave vertex"
+ list ( p2x p2y p2z  p5x )
+endbank
+
+###############  a polygon with 5 corners  #####################################
+
+point p1  ( 1  1 0 ) endpoint
+point p2  ( {expr $p.p2x}  {expr $p.p2y}  {expr $p.p2z} ) endpoint
+point p3  (-1 -1 0 ) endpoint
+point p4  ( 1 -1 0 ) endpoint
+point p5  ( {expr $p.p5x}  0 0 ) endpoint
+ 
+polyline  pgon5  ( p1 p2 p3 p4 p5 p1 )  endpolyline
+instance ipgon5  pgon5   surface R   endinstance
+
+# point c5  ( 0 0 0 ) endpoint  ##  default test
+# the reaL CENTROID
+# this case only works if the extra point is not in line with the polygon's vertices bc otherwise centroid should be (0, 0, 0)
+point c5  ( {expr 0.2*( 1 +$p.p2x -1 +1 +$p.p5x)}  {expr 0.2*( 1 +$p.p2y -1 -1 +0)}  {expr 0.2*( 0 +$p.p2z +0 +0 +0)} ) endpoint
+
+mesh pface
+  face  pf1  ( c5  p1 p2 )  surface Y  endface
+  face  pf2  ( c5  p2 p3 )  surface O  endface
+  face  pf3  ( c5  p3 p4 )  surface M  endface
+  face  pf4  ( c5  p4 p5 )  surface C  endface
+  face  pf5  ( c5  p5 p1 )  surface L  endface
+endmesh
+
+instance ipface  pface     endinstance  ## RENDER
+
+#########################  Centroid Generator ?  ############################
+#
+#  It may be worthwhile to make a separate generator that can handle an arbitrary number of points:
+#
+#  centroid  cID  ( P1, P2, P3...   Pn ) endcentroid    ## This defines a point "cID" with the centroid x, y, z coordinates.
+#
+#
+###########################  END  ###############################

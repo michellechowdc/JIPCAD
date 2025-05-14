@@ -1,0 +1,178 @@
+#
+# TWO_sided_Soap-Trefoil.nom
+#  
+## Another Trefoil layout that allows to suspend a 2-sided Seifert surface.
+##  Use "NO Backface" rendering option.
+#
+# CHS 2024/11/19
+
+###########  Some Surface colors  #############################
+surface M  color  (0.9 0.1 1  ) endsurface   # Magenta
+surface Z  color  (1   0   0.6) endsurface   # Zinnober
+surface R  color  (0.9 0.1 0  ) endsurface   # Red
+surface O  color  (1   0.6 0  ) endsurface   # Orange
+surface Y  color  (0.8 0.8 0  ) endsurface   # Yellow
+surface L  color  (0.5 0.8 0  ) endsurface   # Lime
+surface G  color  (0.1 0.8 0  ) endsurface   # Green
+surface A  color  (0   0.9 0.6) endsurface   # Aqua
+surface C  color  (0   0.8 0.9) endsurface   # Cyan
+surface U  color  (0   0.6 1  ) endsurface   # Uniform
+surface B  color  (0   0.3 1  ) endsurface   # Blue
+surface V  color  (0.5 0.1 1  ) endsurface   # Violet
+surface P  color  (0.7 0   0.9) endsurface   # Purple
+
+surface W  color  (1   1   1  ) endsurface   # White
+surface S  color  (0.8 0.8 0.8) endsurface   # Snow
+surface D  color  (0.2 0.2 0.2) endsurface   # Dark
+surface K  color  (0   0   0  ) endsurface   # blacK
+
+backgroundcolor (0.7 0.8 0.9)  endbackgroundcolor 
+
+
+######  Coordinate System  #############################
+
+point ooo (0 0 0) endpoint
+point xoo (1 0 0) endpoint
+point oyo (0 1 0) endpoint
+point ooz (0 0 1) endpoint
+
+polyline xax ( ooo xoo ) endpolyline
+polyline yax ( ooo oyo ) endpolyline
+polyline zax ( ooo ooz ) endpolyline
+
+group coord_axes
+    instance ixax xax  surface R  endinstance
+    instance iyax yax  surface B  endinstance
+    instance izax zax  surface G  endinstance
+endgroup
+
+ instance ica  coord_axes  scale(1.2 1.2 1.2)  endinstance
+
+############  Adjustable Parameters on Sliders  ##################################
+
+bank p
+   set radi      0.6     0.4     1    0.1    ## radius - inner midpoints
+   set rado      1.1     1       2    0.1    ## radius - outer midpoints
+   set segC     36      18     180    6      ## segments in curve.  Changing this value messes up the hand-picked facets.
+   set sprad    0.03      0.01    1    0.01   ## "radius of spline sweep"
+  list ( radi  rado    segC  sprad  ) 
+endbank
+
+################################  trefoil path  ####################################
+
+##############  Hexagonal prism outline  #####################
+
+point 	uP  (  0.0   0.0     1.0 ) endpoint
+
+point 	u0  (  1.0   0.0     1.0 ) endpoint
+point 	u1  (  0.5   0.866   1.0 ) endpoint
+point 	u2  ( -0.5   0.866   1.0 ) endpoint
+point 	u3  ( -1.0   0.0     1.0 ) endpoint
+point 	u4  ( -0.5  -0.866   1.0 ) endpoint
+point 	u5  (  0.5  -0.866   1.0 ) endpoint
+
+polyline uhex ( u0 u1 u2 u3 u4 u5 u0 ) endpolyline
+
+
+point 	lP  (  0.0   0.0    -1.0 ) endpoint
+
+point 	l0  (  1.0   0.0    -1.0 ) endpoint
+point 	l1  (  0.5   0.866  -1.0 ) endpoint
+point 	l2  ( -0.5   0.866  -1.0 ) endpoint
+point 	l3  ( -1.0   0.0    -1.0 ) endpoint
+point 	l4  ( -0.5  -0.866  -1.0 ) endpoint
+point 	l5  (  0.5  -0.866  -1.0 ) endpoint
+
+polyline lhex ( l0 l1 l2 l3 l4 l5 l0 ) endpolyline
+
+
+point 	m1s  ( {expr $p.radi*0.866}  {expr $p.radi*0.5}  0.0 ) endpoint
+point 	m1b  ( {expr $p.rado*0.866}  {expr $p.rado*0.5}  0.0 ) endpoint
+
+point 	m3s  ( {expr -$p.radi*0.866}  {expr $p.radi*0.5}  0.0 ) endpoint
+point 	m3b  ( {expr -$p.rado*0.866}  {expr $p.rado*0.5}  0.0 ) endpoint
+
+point 	m5s  ( 0  {expr -$p.radi}  0.0 ) endpoint
+point 	m5b  ( 0  {expr -$p.rado}  0.0 ) endpoint
+
+(*
+polyline t1 ( l0 m1s u1 u0 m1b l1 ) endpolyline
+polyline t2 ( l2 m3s u3 u2 m3b l3 ) endpolyline
+polyline t3 ( l4 m5s u5 u4 m5b l5 ) endpolyline
+*)
+
+polyline tref ( l0 m1s u1 u2 m3b l3 l4 m5s u5 u0 m1b l1 l2 m3s u3 u4 m5b l5 l0  ) endpolyline
+
+bspline  bspath   order 4   (l5   l0 m1s u1 u2 m3b l3 l4 m5s u5 u0 m1b l1 l2 m3s u3 u4 m5b l5 l0   m1s)  
+  segs {expr $p.segC}
+endbspline
+
+instance ibsp  bspath   surface D    endinstance
+   
+##################  manually added  ###################################  
+   
+mesh TempMesh0
+ face nb ( .ibsp.v31 .ibsp.v15 .ibsp.v16 .ibsp.v30 ) endface
+ face na ( .ibsp.v32 .ibsp.v14 .ibsp.v15 .ibsp.v31 ) endface
+ face n0 ( .ibsp.v18 .ibsp.v4   uP ) endface
+ face n1 ( uP   .ibsp.v4 .ibsp.v5 .ibsp.v6 ) endface 
+endmesh
+
+mesh InvertMesh0
+ face nbi ( .ibsp.v15  .ibsp.v31  .ibsp.v30 .ibsp.v16 ) endface
+ face nai ( .ibsp.v14  .ibsp.v32  .ibsp.v31 .ibsp.v15 ) endface
+ face n0i ( .ibsp.v4   .ibsp.v18   uP ) endface
+ face n1i (   .ibsp.v6 .ibsp.v5 .ibsp.v4   uP ) endface 
+endmesh
+
+
+group uprHalf
+ instance iTM1 TempMesh0      endinstance
+ instance iTM2 TempMesh0    rotate(0 0 1)(120)   endinstance
+ instance iTM3 TempMesh0    rotate(0 0 1)(-120)   endinstance
+endgroup
+
+group invHalf
+ instance iIM1 InvertMesh0      endinstance
+ instance iIM2 InvertMesh0    rotate(0 0 1)(120)   endinstance
+ instance iIM3 InvertMesh0    rotate(0 0 1)(-120)   endinstance
+endgroup
+
+instance iuH uprHalf  surface Y    endinstance
+instance iuH uprHalf  surface O   rotate(0 1 0)(180)    endinstance
+
+instance ivH invHalf  surface O    endinstance
+instance ivH invHalf  surface Y   rotate(0 1 0)(180)    endinstance
+
+
+## instance iuH uprHalf  surface O  scale(-1 -1 -1)   rotate(0 1 0)(180)   rotate(0 0 1)(60)   endinstance  
+## the "scale(-1-1-1)" trick does not seem to work with 3-fold rotational symmetry.  :-(
+
+
+####################################################################################################
+
+(* # some debugging...
+circle bsprof  ( {expr $p.sprad}  9 )  endcircle
+
+###  The smooth knot curve:
+sweep spworm  crosssection  bsprof  endcrosssection    path bspath  mintorsion  endpath   endsweep
+
+instance itref  spworm   surface O    endinstance
+## instance itref  spworm   surface U   rotate(0 0 1)(120)   endinstance    ## Checking 3-fold symmetry
+
+
+group hexprism
+  instance iuh  uhex   surface U    endinstance
+  instance iul  lhex   surface R    endinstance
+  instance it1  t1     surface D    endinstance
+  instance it2  t2     surface D    endinstance
+  instance it3  t3     surface D    endinstance
+endgroup
+
+instance iall  hexprism   surface K    endinstance
+*)
+
+##############################  END  ################################################
+
+
+

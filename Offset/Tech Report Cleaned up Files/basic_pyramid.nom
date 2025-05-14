@@ -1,0 +1,53 @@
+####  basic_pyramid.nom  ##########################
+
+#####################################################
+
+surface R color (1 0 0) endsurface     # Red
+surface O color (0.9 0.6 0) endsurface # Orange
+surface Y color (1 1 0) endsurface     # Yellow
+surface L color (0.6 0.8 0) endsurface # Lime
+surface G color (0 0.9 0) endsurface   # Green
+surface A color (0 0.9 0.7) endsurface # Aqua
+surface C color (0 1 1) endsurface     # Cyan
+surface U color (0 0.5 1) endsurface   # Uniform
+surface B color (0 0 1) endsurface     # Blue
+surface P color (0.6 0 1) endsurface   # Purple
+surface M color (1 0 1) endsurface     # Magenta
+surface Z color (1 0 0.5) endsurface   # Zinnober
+
+surface W color (1 1 1) endsurface       # White
+surface D color (0.4 0.4 0.4) endsurface # Dark
+
+### These may be referenced by the offset module:
+surface oSurfOuter  color (0 0.9 0) endsurface   # Green
+surface oSurfInner  color (0 0 1) endsurface     # Blue
+surface oSurfEdges  color (1 0 0.5) endsurface   # Zinnober
+
+
+###############  Various parameters  ###########
+bank p
+  set tx         0    -0.5  0.5  0.1   ##  "shift peak in x"
+  set ty         0    -0.5  0.5  0.1   ##  "shift peak in y"
+  set tz         1     0    3    0.1   ##  "height of the pyramid tip"
+
+  list ( tx ty tz )
+endbank
+
+########>>>  Rerun the entire nom-code after any change in slider values!
+
+
+###############  pyramid geometry  #####################################
+mesh pyramid
+  point vx  ( 2  0  0 ) endpoint
+  point vy  ( 0  2  0 ) endpoint
+  point va  (-2  0  0 ) endpoint
+  point vb  ( 0 -2  0 ) endpoint
+  point vz  ( {expr  $p.tx} {expr  $p.ty} {expr  $p.tz} ) endpoint
+
+  face fxy (vz vx vy)  surface R  endface  ## pyr-faces
+  face fya (vz vy va)  surface G  endface
+  face fab (vz va vb)  surface B  endface
+endmesh
+instance ipyramid pyramid  endinstance
+
+###########################  END  ###############################

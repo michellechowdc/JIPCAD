@@ -1,0 +1,158 @@
+# my_soapy_pentafoil.nom
+# 
+# Michelle Chow  2024/11/16
+#####################################################
+
+##############  surface colors   ########################### 
+
+surface M  color  (0.9 0.1 1  ) endsurface   # Magenta
+surface Z  color  (1   0   0.6) endsurface   # Zinnober
+surface R  color  (0.9 0.1 0  ) endsurface   # Red
+surface O  color  (1   0.6 0  ) endsurface   # Orange
+surface Y  color  (0.8 0.8 0  ) endsurface   # Yellow
+surface L  color  (0.5 0.8 0  ) endsurface   # Lime
+surface G  color  (0.1 0.8 0  ) endsurface   # Green
+surface A  color  (0   0.9 0.6) endsurface   # Aqua
+surface C  color  (0   0.8 0.9) endsurface   # Cyan
+surface U  color  (0   0.6 1  ) endsurface   # Uniform
+surface B  color  (0   0.3 1  ) endsurface   # Blue
+surface V  color  (0.5 0.1 1  ) endsurface   # Violet
+surface P  color  (0.7 0   0.9) endsurface   # Purple
+
+surface W  color  (1   1   1  ) endsurface   # White
+surface D  color  (0.2 0.2 0.2) endsurface   # Dark
+surface K  color  (0   0   0  ) endsurface   # blacK
+
+backgroundcolor (0.6 0.7 0.8) endbackgroundcolor 
+
+###################  Coordinate axes  ######################
+
+point ooo  ( 0 0 0 ) endpoint 
+point xoo  ( 1 0 0 ) endpoint
+point oyo  ( 0 1 0 ) endpoint
+point ooz  ( 0 0 1 ) endpoint
+
+polyline xaxis (ooo xoo) endpolyline
+polyline yaxis (ooo oyo) endpolyline
+polyline zaxis (ooo ooz) endpolyline
+
+group coord_axes   
+  instance ix xaxis surface R   endinstance     
+  instance iy yaxis surface B   endinstance
+  instance iz zaxis surface G   endinstance
+endgroup
+
+
+########   USE THESE PATH PARAMS FOR THE SIMPLE FIGURE-8 KNOT:
+
+bank p  
+    set z        0.5    0     1   0.01    # "vertical scale" 
+    set b        0.5    0     1   0.01    # "bulge_B"
+    set a        0.6    0     1   0.01    # "bulge_A"
+    set bseg    48     24   600  12       # "spline-segments"
+    set ctrad    0.01   0.01  1   0.01    # "radius of control sweep"
+    set sprad    0.02    0.01  1   0.01    # "radius of spline sweep"
+
+    set temp    180    0  360   1    
+    set temp2    180    0  360   1    
+
+    set middle 1  1 5  0.1
+    set corner 1.2  1 5  0.1 
+    set width  0.7  0.1 5  0.1
+   #list (  z  b  a  bseg  ctrad  sprad   )
+   list (  middle corner width     bseg  ctrad  sprad  temp temp2)
+endbank
+
+########################   The pentafoil + pentafoil in straight lines   ##################################
+
+point pc1 ({expr -3*$p.corner} {expr 3*$p.corner} 0) endpoint
+point pc2 (0 {expr 5*$p.corner} 0) endpoint
+point pc3 ({expr 3*$p.corner} {expr 3*$p.corner} 0) endpoint
+point pc4 ({expr 2*$p.corner} 0 0) endpoint
+point pc5 ({expr -2*$p.corner} 0 0) endpoint
+
+point pm1f ({expr -1.5*$p.middle} {expr 3.5*$p.middle} {expr $p.width}) endpoint
+point pm1b ({expr -1.5*$p.middle} {expr 3.5*$p.middle} {expr -1*$p.width}) endpoint
+point pm2f ({expr 1.5*$p.middle} {expr 3.5*$p.middle} {expr $p.width}) endpoint
+point pm2b ({expr 1.5*$p.middle} {expr 3.5*$p.middle} {expr -1*$p.width}) endpoint
+point pm3f ({expr 2.5*$p.middle} {expr 1.5*$p.middle} {expr $p.width}) endpoint
+point pm3b ({expr 2.5*$p.middle} {expr 1.5*$p.middle} {expr -1*$p.width}) endpoint
+point pm4f (0 {expr 0.5*$p.middle} {expr $p.width}) endpoint
+point pm4b (0 {expr 0.5*$p.middle} {expr -1*$p.width}) endpoint
+point pm5f ({expr -2.5*$p.middle} {expr 1.5*$p.middle} {expr $p.width}) endpoint
+point pm5b ({expr -2.5*$p.middle} {expr 1.5*$p.middle} {expr -1*$p.width}) endpoint
+
+#polyline  ctpath  ( p8  p1a p1b p2 p3a p3b p4  p5a p5b p6 p7a p7b  p8 )   endpolyline   
+polyline  ctpath  ( pm1f pc2 pm2b pm3f pc4 pm4b pm5f pc1 pm1b pm2f pc3 pm3b pm4f pc5 pm5b pm1f )   endpolyline   
+
+# bspline  bspath  order 4  (p7b p8 p1a p1b p2 p3a p3b p4 p5a p5b p6 p7a p7b p8 p1a)  segs {expr $p.bseg}   endbspline
+bspline  bspath  order 4  (pm1f pc2 pm2b pm3f pc4 pm4b pm5f pc1 pm1b pm2f pc3 pm3b pm4f pc5 pm5b    pm1f pc2 pm2b )  segs {expr $p.bseg}   endbspline
+
+#################  Visualizing the paths with sweeps  ####################################################
+
+circle ctprof  ( {expr $p.ctrad}  3 )  endcircle
+circle bsprof  ( {expr $p.sprad}  9 )  endcircle
+
+###  Control polygon:
+sweep ctworm  crosssection  ctprof  endcrosssection    path ctpath  mintorsion  endpath   endsweep
+
+###  The smooth knot curve:
+sweep spworm  crosssection  bsprof  endcrosssection    path bspath  mintorsion  endpath   endsweep
+
+group assembly
+  instance ictw ctworm    surface D   endinstance  
+  instance ispw spworm    surface O   endinstance  
+endgroup
+
+###  RENDER:
+instance  icax  coord_axes   endinstance
+instance ia assembly endinstance  
+#instance ia assembly translate(0 {expr -5*$p.temp*$p.corner} 0) endinstance  
+
+############## Add faces for soap film   
+mesh TempMesh0 
+# top lobe
+face new9 ( .ia.ispw.v25_4 .ia.ispw.v49_6 .ia.ispw.v2_2 .ia.ispw.v26_4 ) surface Y endface 
+face new10 ( .ia.ispw.v49_6 .ia.ispw.v25_3 .ia.ispw.v24_3 .ia.ispw.v48_6 ) surface C endface 
+face new11 ( .ia.ispw.v48_6 .ia.ispw.v24_4 .ia.ispw.v23_3 .ia.ispw.v47_6 ) surface Y endface 
+face new12 ( .ia.ispw.v23_4 .ia.ispw.v47_5 .ia.ispw.v46_5 .ia.ispw.v22_4 ) surface C endface 
+face new13 ( .ia.ispw.v2_1 .ia.ispw.v3_1 .ia.ispw.v27_3 .ia.ispw.v26_3 ) surface Y endface 
+
+# TL lobe
+face new0 ( .ia.ispw.v3_0 .ia.ispw.v27_1 .ia.ispw.v28_1 .ia.ispw.v4_8 ) surface C endface 
+face new14 ( .ia.ispw.v28_0 .ia.ispw.v4_8 .ia.ispw.v5_8 .ia.ispw.v29_1 ) surface Y endface 
+face new1 ( .ia.ispw.v29_0 .ia.ispw.v5_7 .ia.ispw.v6_7 .ia.ispw.v30_1 ) surface C endface 
+face new15 ( .ia.ispw.v30_0 .ia.ispw.v6_7 .ia.ispw.v7_7 .ia.ispw.v31_1 ) surface Y endface 
+face new2 ( .ia.ispw.v8_8 .ia.ispw.v32_2 .ia.ispw.v33_2 .ia.ispw.v9_8 ) surface C endface 
+
+# BL lobe
+face new16 ( .ia.ispw.v31_0 .ia.ispw.v7_6 .ia.ispw.v8_7 .ia.ispw.v32_1 ) surface Y endface 
+face new3 ( .ia.ispw.v10_7 .ia.ispw.v34_1 .ia.ispw.v35_1 .ia.ispw.v11_8 ) surface C endface 
+face new17 ( .ia.ispw.v9_8 .ia.ispw.v33_2 .ia.ispw.v34_2 .ia.ispw.v10_8 ) surface Y endface 
+face new4 ( .ia.ispw.v12_7 .ia.ispw.v36_0 .ia.ispw.v37_8 .ia.ispw.v13_6 ) surface C endface 
+face new18 ( .ia.ispw.v11_7 .ia.ispw.v35_1 .ia.ispw.v36_0 .ia.ispw.v12_7 ) surface Y endface 
+
+# BR lobe
+face new5 ( .ia.ispw.v38_2 .ia.ispw.v14_0 .ia.ispw.v15_0 .ia.ispw.v39_2 ) surface C endface 
+face new0 ( .ia.ispw.v37_8 .ia.ispw.v13_6 .ia.ispw.v14_6 .ia.ispw.v38_7 ) surface Y endface 
+face new6 ( .ia.ispw.v16_7 .ia.ispw.v40_1 .ia.ispw.v41_1 .ia.ispw.v17_7 ) surface C endface 
+face new19 ( .ia.ispw.v16_3 .ia.ispw.v40_6 .ia.ispw.v39_6 .ia.ispw.v15_3 ) surface Y endface 
+
+# TR lobe
+face new7 ( .ia.ispw.v42_0 .ia.ispw.v18_6 .ia.ispw.v19_6 .ia.ispw.v43_0 ) surface C endface 
+face new20 ( .ia.ispw.v41_5 .ia.ispw.v17_1 .ia.ispw.v18_1 .ia.ispw.v42_5 ) surface Y endface 
+face new8 ( .ia.ispw.v44_2 .ia.ispw.v20_8 .ia.ispw.v21_0 .ia.ispw.v45_2 ) surface C endface 
+face new21 ( .ia.ispw.v43_3 .ia.ispw.v19_0 .ia.ispw.v20_0 .ia.ispw.v44_3 ) surface Y endface 
+face new22 ( .ia.ispw.v22_2 .ia.ispw.v46_4 .ia.ispw.v45_4 .ia.ispw.v21_2 ) surface Y endface 
+endmesh
+
+instance instTempMesh0 TempMesh0 endinstance
+instance instTempMesh1 TempMesh0 scale (-1 -1 -1) rotate(0 1 0)($p.temp2) rotate(0 0 1)($p.temp) endinstance
+#instance ia assembly scale (-1 -1 -1) rotate(0 1 0)($p.temp2) rotate(0 0 1)($p.temp) endinstance  
+
+#instance instTempMesh01 TempMesh0 rotate(0 0 1)(72) endinstance
+#instance instTempMesh02 TempMesh0 rotate(0 0 1)(144) endinstance
+#instance instTempMesh03 TempMesh0 rotate(0 0 1)(216) endinstance
+#instance instTempMesh04 TempMesh0 rotate(0 0 1)(288) endinstance
+
+#################################  END  ###########################################################

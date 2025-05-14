@@ -1,0 +1,88 @@
+# my_trefoil_knot.nom
+# 
+# Michelle CHow  2024/10/23
+#####################################################
+
+##############  surface colors   ########################### 
+
+surface W   color (0.9 0.9 0.9) endsurface   # White
+surface D   color (0.6 0.6 0.6) endsurface   # Dark
+surface K   color (0   0   0  ) endsurface   # blacK
+
+surface O  color  (0.9 0.3 0  ) endsurface   # Orange
+surface R  color  (1   0.1 0  ) endsurface   # Red
+surface G  color  (0   0.9 0  ) endsurface   # Green
+surface B  color  (0   0.3 1  ) endsurface   # Blue
+
+
+###################  Coordinate axes  ######################
+
+point ooo  ( 0 0 0 ) endpoint 
+point xoo  ( 1 0 0 ) endpoint
+point oyo  ( 0 1 0 ) endpoint
+point ooz  ( 0 0 1 ) endpoint
+
+polyline xaxis (ooo xoo) endpolyline
+polyline yaxis (ooo oyo) endpolyline
+polyline zaxis (ooo ooz) endpolyline
+
+group coord_axes   
+  instance ix xaxis surface R   endinstance     
+  instance iy yaxis surface B   endinstance
+  instance iz zaxis surface G   endinstance
+endgroup
+
+
+########   USE THESE PATH PARAMS FOR THE SIMPLE FIGURE-8 KNOT:
+
+bank p  
+    set bseg    60     24   600  12       # "spline-segments"
+    set ctrad    0.01   0.01  1   0.01    # "radius of control sweep"
+    set sprad    0.14    0.01  1   0.01    # "radius of spline sweep"
+
+    set middle 1  1 5  0.1
+    set corner 2  1 5  0.1 
+    set width  0.5  0.05 1  0.01
+   list (  middle corner width     bseg  ctrad  sprad  )
+endbank
+
+########################   The control polygon   ##################################
+
+point pc1 (0 {expr 2*$p.corner} 0) endpoint
+point pc2 ({expr $p.corner} 0 0) endpoint
+point pc3 ({expr -1*$p.corner} 0 0) endpoint
+
+point pm1f ({expr $p.middle} {expr 2*$p.middle} {expr $p.width}) endpoint
+point pm1b ({expr $p.middle} {expr 2*$p.middle} {expr -1*$p.width}) endpoint
+point pm2f ({expr -1*$p.middle} {expr 2*$p.middle} {expr $p.width}) endpoint
+point pm2b ({expr -1*$p.middle} {expr 2*$p.middle} {expr -1*$p.width}) endpoint
+point pm3f (0 {expr 0.5*$p.middle} {expr $p.width}) endpoint
+point pm3b (0 {expr 0.5*$p.middle} {expr -1*$p.width}) endpoint
+
+polyline  ctpath  ( pm2f pc1 pm1b pm3f pc3 pm2b pm1f pc2 pm3b pm2f )   endpolyline   
+
+bspline  bspath  order 4  (pm2f pc1 pm1b pm3f pc3 pm2b pm1f pc2 pm3b pm2f pc1 pm1b)  segs {expr $p.bseg}   endbspline
+
+#################  Visualizing the paths with sweeps  ####################################################
+
+circle ctprof  ( {expr $p.ctrad}  3 )  endcircle
+circle bsprof  ( {expr $p.sprad}  9 )  endcircle
+
+###  Control polygon:
+sweep ctworm  crosssection  ctprof  endcrosssection    path ctpath  mintorsion  endpath   endsweep
+
+###  The smooth knot curve:
+sweep spworm  crosssection  bsprof  endcrosssection    path bspath  mintorsion  endpath   endsweep
+
+group assembly
+  instance  icax  coord_axes   endinstance
+
+  instance ictw ctworm    surface D   endinstance  
+  instance ispw spworm    surface O   endinstance  
+endgroup
+
+###  RENDER:
+instance ia assembly  scale (0.3 0.3 0.3)  rotate(1 0 0)(-90)  endinstance  
+
+
+#################################  END  ###########################################################

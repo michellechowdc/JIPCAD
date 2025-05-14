@@ -1,0 +1,151 @@
+#
+#  Sample of a JIPCAD file using instancing with icosahedral symmetry
+#  20 triangles using 5 colors
+
+#  CHS 2024/10/20
+###############################################
+
+surface  c0 color ( 1 1 1 ) endsurface
+surface  c1 color ( 0.6 0.2 0.4 ) endsurface
+surface  c2 color ( 0.8 0.8 0.2 ) endsurface
+surface  c3 color ( 0.4 0.9 0.2 ) endsurface
+surface  c4 color ( 0.2 0.8 0.8 ) endsurface
+surface  c5 color ( 0.4 0.2 0.9 ) endsurface
+
+
+bank var
+   set rad   0.2  0.0   0.9  0.01   # "radius of explosion"	
+   list ( rad )
+endbank
+
+point K ( 0.381966 -0.661584  -1 ) endpoint
+point L ( 0.381966  0.661584  -1 ) endpoint
+point Z (-0.763932  0         -1 ) endpoint
+
+### an equilateral triangle:
+mesh triangle   
+  face T (Z L K) endface
+endmesh
+
+### Put triangle at variable distance from origin:
+group tri
+  instance itr  triangle   translate (0 0 {expr -$var.rad} )  endinstance
+endgroup
+
+
+### Icosahedral Symmetry generator
+
+group icosa
+  instance i0  tri  surface c1  endinstance     # the redish triangle at the bottom!
+
+  instance i1  tri  surface c2
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (180)
+  endinstance
+  instance i2  tri  surface c3
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (-60)
+  endinstance
+  instance i3  tri  surface c4
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (60)
+  endinstance
+  instance ia  tri  surface c5
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (-120)
+    rotate (0 1 0) (-41.8103)
+  endinstance
+  instance i5  tri  surface c3
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (120)
+    rotate (0 1 0) (-41.8103)
+  endinstance
+  instance i6  tri  surface c5
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (-120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 0 1) (120)
+  endinstance
+  instance i7  tri  surface c4
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 0 1) (120)
+  endinstance
+  instance i8  tri  surface c5
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (-120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 0 1) (-120)
+  endinstance
+  instance i9  tri  surface c2
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 0 1) (-120)
+  endinstance
+  instance I0  tri  surface c5
+    rotate (0 1 0) (180)
+  endinstance
+  instance I1  tri  surface c4
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (180)
+    rotate (0 1 0) (180)
+  endinstance
+  instance I2  tri   
+    surface c3
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (-60)
+    rotate (0 1 0) (180)
+  endinstance
+  instance I3  tri  surface c2
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (60)
+    rotate (0 1 0) (180)
+  endinstance 
+  instance I4  tri  surface c1
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (-120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 1 0) (180)
+  endinstance 
+  instance I5  tri  surface c3
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 1 0) (180)
+  endinstance 
+  instance I6  tri  surface c1
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (-120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 0 1) (120)
+    rotate (0 1 0) (180)
+  endinstance
+  instance I7  tri  surface c2
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 0 1) (120)
+    rotate (0 1 0) (180)
+  endinstance
+  instance I8  tri  surface c1
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (-120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 0 1) (-120)
+    rotate (0 1 0) (180)
+  endinstance
+  instance I9  tri  surface c4
+    rotate (0 1 0) (41.8103)
+    rotate (0 0 1) (120)
+    rotate (0 1 0) (-41.8103)
+    rotate (0 0 1) (-120)
+    rotate (0 1 0) (180)
+  endinstance 
+endgroup
+
+#> Render:
+  instance iicosa  icosa  scale (0.5 0.5 0.5)   endinstance
+
+#################  END  ####################################

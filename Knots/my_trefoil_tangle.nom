@@ -1,0 +1,183 @@
+# my_trefoil_tangle.nom
+# first try, manually aligning each trefoil
+# 
+# Michelle CHow  2024/10/23
+#####################################################
+
+##############  surface colors   ########################### 
+
+surface W   color (0.9 0.9 0.9) endsurface   # White
+surface D   color (0.6 0.6 0.6) endsurface   # Dark
+surface K   color (0   0   0  ) endsurface   # blacK
+
+surface O  color  (0.9 0.3 0  ) endsurface   # Orange
+surface R  color  (1   0.1 0  ) endsurface   # Red
+surface G  color  (0   0.9 0  ) endsurface   # Green
+surface B  color  (0   0.3 1  ) endsurface   # Blue
+
+backgroundcolor (0.6 0.7 0.8) endbackgroundcolor 
+
+###################  Coordinate axes  ######################
+
+point ooo  ( 0 0 0 ) endpoint 
+point xoo  ( 1 0 0 ) endpoint
+point oyo  ( 0 1 0 ) endpoint
+point ooz  ( 0 0 1 ) endpoint
+
+polyline xaxis (ooo xoo) endpolyline
+polyline yaxis (ooo oyo) endpolyline
+polyline zaxis (ooo ooz) endpolyline
+
+group coord_axes   
+  instance ix xaxis surface R   endinstance     
+  instance iy yaxis surface B   endinstance
+  instance iz zaxis surface G   endinstance
+endgroup
+
+#####################  wire cube  #################
+
+point Yxyz  ( 4  4  4 ) endpoint
+point Yxyc  ( 4  4  0 ) endpoint
+#point Yxbz  ( 1 -1  1 ) endpoint
+point Yxbc  ( 4 0 0 ) endpoint
+point Yayz  (0  4  4 ) endpoint
+#point Yayc  (-1  1 -1 ) endpoint
+#point Yabz  (-1 -1  1 ) endpoint
+#point Yabc  (-1 -1 -1 ) endpoint
+
+polyline edge3  (Yxbc Yxyc Yxyz Yayz) endpolyline
+#instance line edge3 surface D endinstance
+
+group wcube
+  instance ie1 edge3       endinstance
+  instance ie2 edge3   rotate(0 0 1)(90) translate (4 0 0)  endinstance
+  instance ie3 edge3   rotate(0 0 1)(180) translate (4 4 0)  endinstance
+  instance ie4 edge3   rotate(0 0 1)(270) translate (0 4 0)  endinstance
+endgroup
+
+#instance icube wcube  surface D endinstance 
+
+########   USE THESE PATH PARAMS FOR THE SIMPLE FIGURE-8 KNOT:
+
+bank p  
+    set bseg    60     24   600  12       # "spline-segments"
+    set ctrad    0.01   0.01  1   0.01    # "radius of control sweep"
+    set sprad    0.14    0.01  1   0.01    # "radius of spline sweep"
+
+    set middle 1  0.1 5  0.1
+    set corner 1  0.1 5  0.1 
+    set width  0.5  0.05 1  0.01
+
+    set xdist_w     4.3     -5       5   0.1     # "tria distance from origin" : 0.29     : 0.29
+    set ydist_w     0.6     -5       5   0.1     # "tria distance from origin" : 0.29     : 0.29
+    set zdist_w     -0.2     -5       5   0.1     # "tria distance from origin" : 0.29     : 0.29
+    set rotx_w      37       -360     360     1        # "tria rotation"             : 70       : 30
+    set roty_w      -127       -360     360     1        # "tria rotation"             : 70       : 30
+    set rotz_w      1       -360     360     1        # "tria rotation"             : 70       : 30
+    set xdist_g     -0.2     -5       5   0.1     # "tria distance from origin" : 0.29     : 0.29
+    set ydist_g     0     -5       5   0.1     # "tria distance from origin" : 0.29     : 0.29
+    set zdist_g     0.2     -5       5   0.1     # "tria distance from origin" : 0.29     : 0.29
+    #set dist     0.0     -5       5   0.5     # "tria distance from origin" : 0.29     : 0.29
+    set rot_g      -14       -360     360     1        # "tria rotation"             : 70       : 30
+    #set rot      60       -180     180     1        # "tria rotation"             : 70       : 30
+    set rottemp      -60       -180     180     1        # "tria rotation"             : 70       : 30
+   #list (  middle corner width     bseg  ctrad  sprad     dist xdist ydist rot rottemp)
+   list (  middle corner width   xdist_w ydist_w zdist_w rotx_w roty_w rotz_w    xdist_g ydist_g zdist_g rot_g )
+endbank
+
+########################   The control polygon   ##################################
+
+point pc1 (0 {expr 2*$p.corner} 0) endpoint
+point pc2 ({expr $p.corner} 0 0) endpoint
+point pc3 ({expr -1*$p.corner} 0 0) endpoint
+
+point pm1f ({expr $p.middle} {expr 2*$p.middle} {expr $p.width}) endpoint
+point pm1b ({expr $p.middle} {expr 2*$p.middle} {expr -1*$p.width}) endpoint
+point pm2f ({expr -1*$p.middle} {expr 2*$p.middle} {expr $p.width}) endpoint
+point pm2b ({expr -1*$p.middle} {expr 2*$p.middle} {expr -1*$p.width}) endpoint
+point pm3f (0 {expr 0.5*$p.middle} {expr $p.width}) endpoint
+point pm3b (0 {expr 0.5*$p.middle} {expr -1*$p.width}) endpoint
+
+polyline  ctpath  ( pm2f pc1 pm1b pm3f pc3 pm2b pm1f pc2 pm3b pm2f )   endpolyline   
+bspline  bspath  order 4  (pm2f pc1 pm1b pm3f pc3 pm2b pm1f pc2 pm3b pm2f pc1 pm1b)  segs {expr $p.bseg}   endbspline
+
+### trefoil with equilateral triangle
+#pre adding sliders
+point ec1 (0 0 0) endpoint
+point ec2 ({expr 4*$p.corner} 0 0) endpoint
+point ec3 ({expr 2*$p.corner} {expr 3.464101615137*$p.corner} 0) endpoint
+
+point em1f ({expr 2*$p.middle} 0 {expr $p.width}) endpoint
+point em1b ({expr 2*$p.middle} 0 {expr -1*$p.width}) endpoint
+point em2f ({expr 3*$p.middle} {expr 1.73205080756*$p.middle} {expr $p.width}) endpoint
+point em2b ({expr 3*$p.middle} {expr 1.73205080756*$p.middle} {expr -1*$p.width}) endpoint
+point em3f ({expr 1*$p.middle} {expr 1.73205080756*$p.middle} {expr $p.width}) endpoint
+point em3b ({expr 1*$p.middle} {expr 1.73205080756*$p.middle} {expr -1*$p.width}) endpoint
+
+bspline  trefpath  order 4  (ec1 em1f em2b ec3 em3f em1b ec2 em2f em3b    ec1 em1f em2b)  segs {expr $p.bseg}   endbspline
+
+### square pyramid points
+point tb1 (0 0 0) endpoint
+point tb2 (4 0 0) endpoint
+point tb3 (4 0 4) endpoint
+point tb4 (0 0 4) endpoint
+point tpt (2 3.464101615137 2) endpoint
+
+#polyline tetrahedronPath (tb1 tpt tb2 tb1 tb4 tpt tb3 tb2 tb3 tb4) endpolyline
+
+### tetrahedron points
+point t1 (0 0 0) endpoint
+point t2 (4 0 0) endpoint
+point t3 (2 3.464 0) endpoint
+point t4 (2 1.155 3.266) endpoint
+
+polyline tetrahedronPath (t1 t2 t3 t1 t4 t3 t2 t4) endpolyline
+
+#################  Visualizing the paths with sweeps  ####################################################
+
+circle ctprof  ( {expr $p.ctrad}  3 )  endcircle
+circle bsprof  ( {expr $p.sprad}  9 )  endcircle
+
+### trefoil with eq triangle
+sweep trefworm  crosssection  bsprof  endcrosssection    path trefpath  mintorsion  endpath   endsweep
+#instance trefInst trefworm endinstance
+
+### tetrahedron frame
+sweep tetworm  crosssection  ctprof  endcrosssection    path tetrahedronPath  mintorsion  endpath   endsweep
+instance tetInst tetworm endinstance
+
+###  Control polygon:
+sweep ctworm  crosssection  ctprof  endcrosssection    path ctpath  mintorsion  endpath   endsweep
+
+###  The smooth knot curve:
+sweep spworm  crosssection  bsprof  endcrosssection    path bspath  mintorsion  endpath   endsweep
+
+group assembly
+  instance  icax  coord_axes   endinstance
+
+  instance ictw ctworm    surface D   endinstance  
+  instance ispw spworm    surface O   endinstance  
+endgroup
+
+###  RENDER:
+#instance ia assembly  scale (0.3 0.3 0.3)  rotate(1 0 0)(-90)  endinstance  
+
+##########################################################################################
+instance  icax  coord_axes   endinstance
+
+group tangle
+  #instance il1 trefworm  surface B  rotate(1 0 0)(30) endinstance   
+  instance il1 trefworm  surface B  endinstance   
+  instance il2 trefworm  surface R  rotate(1 0 0)(70) endinstance   
+  instance il3 trefworm  surface G  rotate(0 1 0)(-60) rotate(1 0 0)(-30) rotate(0 0 1)({expr $p.rot_g}) translate ({expr $p.xdist_g} {expr $p.ydist_g} {expr $p.zdist_g}) endinstance   
+  instance il4 trefworm  surface W  rotate(1 0 0)({expr $p.rotx_w}) rotate(0 1 0)({expr $p.roty_w}) rotate(0 0 1)({expr $p.rotz_w}) translate ({expr $p.xdist_w} {expr $p.ydist_w} {expr $p.zdist_w}) endinstance   
+
+#2 1.155 3.266         2 3.464 0 rotate(1 0 0)(70)  
+  #instance il1 spworm  surface B  rotate(0 0 0)({expr $p.rot}) endinstance   
+  #instance il1 spworm  surface R  rotate(1 0 0)({expr $p.rot}) rotate(0 0 1)({expr -1*$p.rot}) translate (-1.5 1 0) endinstance   
+  #instance il1 spworm  surface G  rotate(0 0 1)({expr $p.rottemp}) rotate(1 0 0)(-130) rotate(0 1 0)(-130) translate({expr $p.xdist} {expr $p.ydist} 0) endinstance   
+endgroup
+
+instance it tangle endinstance   # RENDER this
+
+#################################  END  ###########################################################

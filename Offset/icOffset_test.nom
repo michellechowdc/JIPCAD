@@ -1,0 +1,122 @@
+####  icOffset_test.nom  ##########################
+
+##  A few simple connected faces to test the averaged face-normal-vector
+#   and the proper offsetting of inner and outer surfaces.
+#   (The current "offset" function in the pull-down menue does an imperfect job!)
+
+##  First, make this nom-file work with different offset-thicknesses, -- with no holes in the faces ("oHole = 0").
+#   Then also make it work with holes in the faces (1.0 > hole > 0).
+
+###  CHS 2025/2/5
+
+#####################################################
+
+surface R color (1 0 0) endsurface     # Red
+surface O color (0.9 0.6 0) endsurface # Orange
+surface Y color (1 1 0) endsurface     # Yellow
+surface L color (0.6 0.8 0) endsurface # Lime
+surface G color (0 0.9 0) endsurface   # Green
+surface A color (0 0.9 0.7) endsurface # Aqua
+surface C color (0 1 1) endsurface     # Cyan
+surface U color (0 0.5 1) endsurface   # Uniform
+surface B color (0 0 1) endsurface     # Blue
+surface P color (0.6 0 1) endsurface   # Purple
+surface M color (1 0 1) endsurface     # Magenta
+surface Z color (1 0 0.5) endsurface   # Zinnober
+
+surface W color (1 1 1) endsurface       # White
+surface D color (0.4 0.4 0.4) endsurface # Dark
+
+## These may be referenced by the offset module:
+surface oSurfOuter  color (0 0.9 0) endsurface   # Green
+surface oSurfInner  color (0 0 1) endsurface     # Blue
+surface oSurfEdges  color (1 0 0.5) endsurface   # Zinnober
+
+
+###############  Various parameters  ###########
+bank p
+  set tz         1     0    3    0.1   ##  "height of the pyramid tip"
+  set ty         0    -0.5  0.5  0.1   ##  "shift peak in y"
+  set tx         0    -0.5  0.5  0.1   ##  "shift peak in x"
+  set so         1     0    2    0.1   ##  "shift concave vertex in x b "
+  set zbot      -1    -2    0    0.1   ##  "z-height of bot plate"
+
+  set oThick     0.05  0.01 0.2  0.01  ##  "amount of offsetting"
+  set oHole      0.8   0    0.9  0.1   ##  "size (percentage) of hole in each face"
+
+  set levelSD    3     1    5    1     ##  "CC-subdivision level"
+
+  list ( tz ty tx so zbot  oThick oHole  levelSD )
+endbank
+
+########>>>  Rerun the entire nom-code after any change in slider values!
+
+
+###############  some simple geometry  #####################################
+
+mesh flat
+  point bx  ( 2  0   {expr $p.zbot} ) endpoint
+  point by  ( 0  2   {expr $p.zbot} ) endpoint
+  point ba  (-2  0   {expr $p.zbot} ) endpoint
+  point bb  ( 0 -2   {expr $p.zbot} ) endpoint
+  point bo  ( {expr  $p.so}  {expr -$p.so}  {expr $p.zbot} ) endpoint
+
+  face bottom (by  bx    bb  ba   )  surface C  endface
+# face bottom (by  bx  bo  bb  ba   )  surface C  endface    ## For later check on concave polygons
+endmesh  #flat
+
+mesh pyr
+  point vx  ( 2  0  0 ) endpoint
+  point vy  ( 0  2  0 ) endpoint
+  point va  (-2  0  0 ) endpoint
+  point vb  ( 0 -2  0 ) endpoint
+  point vz  ( {expr  $p.tx} {expr  $p.ty} {expr  $p.tz} ) endpoint
+
+  face fxy (vz vx vy)  surface R  endface
+  face fya (vz vy va)  surface G  endface
+  face fab (vz va vb)  surface B  endface
+#  face fbx (vz vb vx)  surface Y  endface     ## The fourth side of the pyramid
+endmesh  #pyr
+
+
+###################  Now do merging, subdivision, and offsetting "in-code"  ###########################
+
+This requires an enhancement of the JIPCAD parser.
+## Do the merge module first:  Maintain the face colors!
+
+##  Do "in-code" Subdivision next:  Again, maintain face colors.
+
+##>>>  The Offsetting module neds some work to handle non-planar faces. 
+##>>>  Basically maintain all color information.
+##>>>   If the faces have no color, the 3 types of offset faces could be colored with: oSurfOuter, oSurfInner, oSurfEdges.
+
+
+offset  oflat     ## No merging needed
+  thick {expr $p.oThick}  # amount of face-offestting of inner and outer oSurfaces.  ## e.g. 0.1  
+  width {expr $p.oHole}  # start with no gridding at all:  oHole=0;   ## useful for gridded surfaces:  oHole = 0.7 ...  0.9
+ ## Place here all geometry that should be offset:
+  instance iflat flat  endinstance
+endoffset
+
+
+merge  mpyr  
+ ## Place here all geometry that should be offset:
+  instance ipyr pyr  endinstance
+endmerge
+
+offset  opyr  
+  thick {expr $p.oThick}  # amount of face-offestting of inner and outer oSurfaces.
+  width {expr $p.oHole}   # start with no gridding at all:  set oHole = 0
+ ## Place here all geometry that should be offset:
+  instance impyr mpyr  endinstance
+endoffset
+
+
+###### Finally, showing the offset result:
+
+ instance ioflat oflat  endinstance
+
+ instance iopyr  opyr  endinstance  
+
+
+###########################  END  ###############################

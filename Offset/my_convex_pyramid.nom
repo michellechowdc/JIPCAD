@@ -1,0 +1,91 @@
+#####################################################
+
+surface R color (1 0 0) endsurface     # Red
+surface O color (0.9 0.6 0) endsurface # Orange
+surface Y color (1 1 0) endsurface     # Yellow
+surface L color (0.6 0.8 0) endsurface # Lime
+surface G color (0 0.9 0) endsurface   # Green
+surface A color (0 0.9 0.7) endsurface # Aqua
+surface C color (0 1 1) endsurface     # Cyan
+surface U color (0 0.5 1) endsurface   # Uniform
+surface B color (0 0 1) endsurface     # Blue
+surface P color (0.6 0 1) endsurface   # Purple
+surface M color (1 0 1) endsurface     # Magenta
+surface Z color (1 0 0.5) endsurface   # Zinnober
+
+surface W color (1 1 1) endsurface       # White
+surface D color (0.4 0.4 0.4) endsurface # Dark
+
+## These may be referenced by the offset module:
+surface oSurfOuter  color (0 0.9 0) endsurface   # Green
+surface oSurfInner  color (0 0 1) endsurface     # Blue
+surface oSurfEdges  color (1 0 0.5) endsurface   # Zinnober
+
+
+###############  Various parameters  ###########
+bank p
+  set so         0.5     0    2    0.1   ##  "shift concave vertex in x b "
+  set zbot       0      -2    0    0.1   ##  "z-height of bot plate"
+
+  set cent_x     0.1     0    2    0.1   ## "x coord of centroid"
+  set cent_y     0.1     0    2    0.1   ## "y coord of centroid"
+  set cent_z     0.0     0    2    0.1   ## "z coord of centroid"
+
+  set norm_x     0.0    -1    1    0.1   ## "x coord for end of norm vect"
+  set norm_y     0.0    -1    1    0.1   ## "y coord for end of norm vect"
+  set norm_z    -3.3    -5    5    0.1   ## "z coord for end of norm vect"
+  
+  list ( so zbot cent_x cent_y cent_z norm_x norm_y norm_z)
+endbank
+
+###############  some simple geometry  #####################################
+
+# display polygon
+mesh flat
+  #point bx  ( 2  0   {expr $p.zbot} ) endpoint
+  #point by  ( 0  2   {expr $p.zbot} ) endpoint
+  #point ba  (-2  0   {expr $p.zbot} ) endpoint
+  #point bb  ( 0 -2   {expr $p.zbot} ) endpoint
+  point bo  ( {expr  $p.so}  {expr -$p.so}  {expr $p.zbot} ) endpoint  
+  
+  point bx  ( 2  0   0 ) endpoint
+  point by  ( 0  2   0 ) endpoint
+  point ba  (-2  0   0 ) endpoint
+  point bb  ( 0 -2   0 ) endpoint
+  #point bo  ( 0.5  0.5  0 ) endpoint
+  # this doesn't display properly, why?
+
+  #face bottom (by  bx    bb  ba   )  surface C  endface
+  face bottom (by  bx  bo  bb  ba   )  surface O endface    ## For later check on concave polygons
+  # how does the list of vertices work, is it CCW listing?
+endmesh
+instance iiflat flat  endinstance
+
+# display angle weighted normal vector
+point centroid ( {expr $p.cent_x}  {expr $p.cent_y}  {expr $p.cent_z} ) endpoint
+point norm ( {expr $p.norm_x}  {expr $p.norm_y} {expr $p.norm_z}  ) endpoint
+polyline normVec (centroid norm) endpolyline
+
+circle profile ( 0.05  8 )  endcircle
+
+sweep vec
+    crosssection  profile endcrosssection
+    path normVec endpath   
+endsweep
+
+instance i vec  surface R   endinstance
+
+###################  Now do merging, subdivision, and offsetting "in-code"  ###########################
+
+merge  mflat 
+  instance iflat flat  endinstance
+endmerge
+
+offset offset1
+    offset_type NOME_OFFSET_DEFAULT
+    height 0.1 # or use {expr $p.oThick}
+    width 0.1 # or use {expr $p.oHole}
+    instance instance1 mflat endinstance
+endoffset
+
+###########################  END  ###############################

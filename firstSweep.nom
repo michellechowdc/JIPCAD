@@ -1,0 +1,23 @@
+backgroundcolor  (0.8 0.9 1.0)  endbackgroundcolor 
+
+# Path
+point p1 (0 0 0) endpoint
+point p2 (0 0 15) endpoint
+
+polyline path1 (p1 p2) endpolyline
+
+# Cross Section
+point s1 (1 1 0) endpoint
+point s2 (1 -1 0) endpoint
+point s3 (-1 -1 0) endpoint
+point s4 (-1 1 0) endpoint
+
+polyline crossSection1 (s1 s2 s3 s4) closed endpolyline
+
+# Sweep
+sweep s1
+    crosssection crossSection1 endcrosssection
+    path path1 endpath
+endsweep
+
+instance sweepinst s1 endinstance

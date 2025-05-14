@@ -1,0 +1,105 @@
+### T_Tangle_.nom
+
+##  Four interlinked triangle loops; tetrahedrl symmetry
+  
+## CHS 2024/10/20
+############################################################
+
+#####################  SURFACES   #################### 
+
+surface M  color  (0.9 0   1  ) endsurface   # Magenta
+surface Z  color  (1   0   0.6) endsurface   # Zinnober
+surface R  color  (1   0.1 0  ) endsurface   # Red
+surface O  color  (1   0.6 0  ) endsurface   # Orange
+surface Y  color  (1   1   0  ) endsurface   # Yellow
+surface L  color  (0.5 1   0  ) endsurface   # Lime
+surface G  color  (0   0.9 0  ) endsurface   # Green
+surface A  color  (0   0.9 0.7) endsurface   # Aqua
+surface C  color  (0   1   1  ) endsurface   # Cyan
+surface U  color  (0   0.6 1  ) endsurface   # Uniform
+surface B  color  (0   0.3 1  ) endsurface   # Blue
+surface V  color  (0.3 0   1  ) endsurface   # Violet
+surface P  color  (0.6 0   1  ) endsurface   # Purple
+
+surface W  color  (0.9 0.9 0.9) endsurface   # White
+surface D  color  (0.4 0.4 0.4) endsurface   # Dark
+surface K  color  (0   0   0  ) endsurface   # blacK
+
+
+################  Coordinate axes  ##################
+
+point ooo  ( 0 0 0 ) endpoint 
+point xoo  ( 1 0 0 ) endpoint
+point oyo  ( 0 1 0 ) endpoint
+point ooz  ( 0 0 1 ) endpoint
+
+polyline xaxis (ooo xoo) endpolyline
+polyline yaxis (ooo oyo) endpolyline
+polyline zaxis (ooo ooz) endpolyline
+
+group coord_axes
+  instance ix xaxis surface R endinstance
+  instance iy yaxis surface U endinstance
+  instance iz zaxis surface G endinstance
+endgroup
+
+
+#####################  wire cube  #################
+
+point Yxyz  ( 1  1  1 ) endpoint
+point Yxyc  ( 1  1 -1 ) endpoint
+point Yxbz  ( 1 -1  1 ) endpoint
+point Yxbc  ( 1 -1 -1 ) endpoint
+point Yayz  (-1  1  1 ) endpoint
+point Yayc  (-1  1 -1 ) endpoint
+point Yabz  (-1 -1  1 ) endpoint
+point Yabc  (-1 -1 -1 ) endpoint
+
+polyline edge3  (Yxbc Yxyc Yxyz Yayz) endpolyline
+
+group wcube
+  instance ie1 edge3       endinstance
+  instance ie2 edge3   rotate(0 0 1)(90)   endinstance
+  instance ie3 edge3   rotate(0 0 1)(180)   endinstance
+  instance ie4 edge3   rotate(0 0 1)(270)   endinstance
+endgroup
+
+##################  Parameters  #########################################  special values: #######
+
+bank p       # : Central Tangle                                          : Outer tangle; : Tetra
+    set dist     0.0     0       0.5   0.01     # "tria distance from origin" : 0.29     : 0.29
+    set rot      0       0     120     1        # "tria rotation"             : 70       : 30
+    set wr       0.17    0.01    0.3   0.01     # "worm radius"               : 0.11     : 0.01
+   list ( dist rot wr )
+endbank
+
+#################  Triangle sweep path  ##########################################################
+
+circle circ  ( {expr $p.wr}  9 )  endcircle
+
+point bz  ( 0 -1 1 ) endpoint 
+point ay  ( -1 1 0 ) endpoint 
+point xc  ( 1 0 -1 ) endpoint 
+
+polyline triapath  (xc   bz ay xc bz   ay)  endpolyline      # around (1 1 1)-axis
+
+sweep loop
+  crosssection circ  endcrosssection
+  path  triapath   mintorsion   cutbegin  cutend   endpath   # for nicely mitered closure
+endsweep
+
+##########################################################################################
+
+group tangle
+  instance icax coord_axes   endinstance 
+  instance icube wcube  surface D  scale(1.5 1.5 1.5)  endinstance 
+
+  instance il1 loop  surface O  rotate(1 1 1)({expr $p.rot})  translate({expr $p.dist} {expr $p.dist} {expr $p.dist})  endinstance   
+  instance il1 loop  surface U  rotate(1 1 1)({expr $p.rot})  translate({expr $p.dist} {expr $p.dist} {expr $p.dist})  rotate(1 0 0)(180) endinstance   
+  instance il1 loop  surface Y  rotate(1 1 1)({expr $p.rot})  translate({expr $p.dist} {expr $p.dist} {expr $p.dist})  rotate(0 1 0)(180) endinstance   
+  instance il1 loop  surface G  rotate(1 1 1)({expr $p.rot})  translate({expr $p.dist} {expr $p.dist} {expr $p.dist})  rotate(0 0 1)(180) endinstance   
+endgroup
+
+instance it tangle endinstance   # RENDER this
+
+##########################  END  ############################################################

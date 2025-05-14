@@ -1,0 +1,125 @@
+##########  surface colors  ##########################
+
+surface M  color  (0.8 0   0.8) endsurface   # Magenta
+surface Z  color  (0.8 0   0.5) endsurface   # Zinnober
+surface R  color  (0.9 0   0  ) endsurface   # Red
+surface O  color  (0.8 0.5 0  ) endsurface   # Orange
+surface Y  color  (0.8 0.8 0  ) endsurface   # Yellow
+surface L  color  (0.6 0.8 0  ) endsurface   # Lime
+surface G  color  (0   0.6 0  ) endsurface   # Green
+surface A  color  (0   0.9 0.7) endsurface   # Aqua
+surface C  color  (0   0.8 0.8) endsurface   # Cyan
+surface U  color  (0   0.6 0.9) endsurface   # Uniform
+surface B  color  (0   0.2 0.6) endsurface   # Blue
+surface V  color  (0.3 0   0.8) endsurface   # Violet
+surface P  color  (0.6 0   0.7) endsurface   # Purple
+
+surface W  color  (1   1   1  ) endsurface   # White
+surface S  color  (0.7 0.7 0.7) endsurface   # Snow
+surface D  color  (0.4 0.4 0.4) endsurface   # Dark
+surface K  color  (0   0   0  ) endsurface   # blacK
+
+backgroundcolor  (0.8 0.9 1.0)  endbackgroundcolor 
+
+###############################  Coordinate axes  ######################
+
+point ooo  ( 0 0 0 ) endpoint 
+point xoo  ( 2 0 0 ) endpoint
+point oyo  ( 0 2 0 ) endpoint
+point ooz  ( 0 0 2 ) endpoint
+
+polyline xaxis (ooo xoo) endpolyline
+polyline yaxis (ooo oyo) endpolyline
+polyline zaxis (ooo ooz) endpolyline
+
+group coord_axes  
+  instance ix  xaxis  surface R   endinstance     
+  instance iy  yaxis  surface B   endinstance
+  instance iz  zaxis  surface G   endinstance
+endgroup
+
+  instance icoord coord_axes   endinstance     
+
+#############   20 Dodecahedral Vertices   ################################
+
+point 	Xy ( 1.618034  0.618034  0 ) endpoint   
+point 	Xb ( 1.618034  -0.618034  0 ) endpoint
+point 	Ay ( -1.618034  0.618034  0 ) endpoint
+point 	Ab ( -1.618034  -0.618034  0 ) endpoint
+point 	Yz ( 0  1.618034  0.618034 ) endpoint
+point 	Yc ( 0  1.618034  -0.618034 ) endpoint
+point 	Bz ( 0  -1.618034  0.618034 ) endpoint
+point 	Bc ( 0  -1.618034  -0.618034 ) endpoint
+point 	Zx ( 0.618034  0  1.618034 ) endpoint
+point 	Za ( -0.618034  0  1.618034 ) endpoint
+point 	Cx ( 0.618034  0  -1.618034 ) endpoint
+point 	Ca ( -0.618034  0  -1.618034 ) endpoint
+point 	XYZ ( 1.0  1.0  1.0 ) endpoint
+point 	XBZ ( 1.0  -1.0  1.0 ) endpoint
+point 	AYZ ( -1.0  1.0  1.0 ) endpoint
+point 	ABZ ( -1.0  -1.0  1.0 ) endpoint
+point 	XYC ( 1.0  1.0  -1.0 ) endpoint
+point 	XBC ( 1.0  -1.0  -1.0 ) endpoint
+point 	AYC ( -1.0  1.0  -1.0 ) endpoint
+point 	ABC ( -1.0  -1.0  -1.0 ) endpoint
+
+#######################   CUBE  #########################################
+
+polyline edge3 (XBC XYC XYZ AYZ) endpolyline
+
+group cubeF
+  instance ie1  edge3       endinstance
+  instance ie2  edge3   rotate(0 0 1)(90)   endinstance
+  instance ie3  edge3   rotate(0 0 1)(180)   endinstance
+  instance ie4  edge3   rotate(0 0 1)(270)   endinstance
+endgroup
+
+  instance icF  cubeF  surface U  endinstance     
+
+############    surface of the dodecahedron: #########################################
+mesh dod
+  face 	Zy  (Zx XYZ Yz AYZ Za )   endface
+  face 	Zb  (Za ABZ Bz XBZ Zx )   endface
+  face 	Yx  (Yz XYZ Xy XYC Yc )   endface
+  face 	Ya  (Yc AYC Ay AYZ Yz )   endface
+  face 	Bx  (Bc XBC Xb XBZ Bz )   endface
+  face 	Ba  (Bz ABZ Ab ABC Bc )   endface
+
+  face 	Xz  (Xy XYZ Zx XBZ Xb )   endface
+  face 	Xc  (Xb XBC Cx XYC Xy )   endface
+  face 	Az  (Ab ABZ Za AYZ Ay )   endface
+  face 	Ac  (Ay AYC Ca ABC Ab )   endface
+  face 	Cy  (Ca AYC Yc XYC Cx )   endface
+  face 	Cb  (Cx XBC Bc ABC Ca )   endface
+endmesh
+
+instance idod  dod   surface Y  endinstance
+   
+###########################  
+   
+polyline TempPoly0 ( Xy XYC XYZ Yz Zx Za XBZ Bz Xb XBC ) closed endpolyline
+polyline TempPoly1 ( Bc Ca Cx AYC Yc Ay AYZ Ab ABZ ABC) closed endpolyline
+
+# AYC
+#instance instTempPoly0 TempPoly0 endinstance
+#polyline TempPoly1 ( .icF.ie1.XYC .icF.ie1.XYZ ) endpolyline
+#instance instTempPoly1 TempPoly1 endinstance  ## view the dodecahedron
+
+circle profile ( 0.05  8 )  endcircle
+sweep  worm
+    crosssection  profile endcrosssection
+    path  TempPoly0 mintorsion endpath   
+endsweep
+instance iworm worm  surface D   endinstance
+
+sweep  worm1
+    crosssection  profile endcrosssection
+    path  TempPoly1 mintorsion endpath   
+endsweep
+instance iworm worm1  surface D   endinstance
+   
+###########################  
+   
+
+
+######################################### polyline #########################################

@@ -1,0 +1,52 @@
+# face 1: all positive faces
+point 	XYC ( 1.0  1.0  -1.0 ) endpoint
+point 	Xy ( 1.618034  0.618034  0 ) endpoint   
+point 	XYZ ( 1.0  1.0  1.0 ) endpoint
+point 	Yz ( 0  1.618034  0.618034 ) endpoint
+point 	Yc ( 0  1.618034  -0.618034 ) endpoint
+point 	XYC ( 1.0  1.0  -1.0 ) endpoint
+
+# face 2: offset R negative Z faces
+point 	Cx ( 0.618034  0  -1.618034 ) endpoint
+point 	Ca ( -0.618034  0  -1.618034 ) endpoint
+point 	AYC ( -1.0  1.0  -1.0 ) endpoint
+point 	Yc ( 0  1.618034  -0.618034 ) endpoint
+
+# overlap back to new starting point
+point 	Yz ( 0  1.618034  0.618034 ) endpoint
+
+# face 3: negative x, positive y
+point 	AYZ ( -1.0  1.0  1.0 ) endpoint
+point 	Ay ( -1.618034  0.618034  0 ) endpoint
+point 	AYC ( -1.0  1.0  -1.0 ) endpoint # back to face 2
+
+# face 4: 
+point 	Ca ( -0.618034  0  -1.618034 ) endpoint # back to face 2
+point 	ABC ( -1.0  -1.0  -1.0 ) endpoint
+point 	Ab ( -1.618034  -0.618034  0 ) endpoint
+point 	Ay ( -1.618034  0.618034  0 ) endpoint # back to face 3
+
+# face 5:
+point 	AYZ ( -1.0  1.0  1.0 ) endpoint #overlap face 3
+point 	Za ( -0.618034  0  1.618034 ) endpoint
+point 	ABZ ( -1.0  -1.0  1.0 ) endpoint
+point 	Ab ( -1.618034  -0.618034  0 ) endpoint # back to face 4
+
+# face 6:
+point 	ABZ ( -1.0  -1.0  1.0 ) endpoint # go back on self
+point 	Bz ( 0  -1.618034  0.618034 ) endpoint
+point 	Bc ( 0  -1.618034  -0.618034 ) endpoint
+point 	ABC ( -1.0  -1.0  -1.0 ) endpoint # connect to face 4
+
+# face 7:
+point 	Bc ( 0  -1.618034  -0.618034 ) endpoint # go back on self
+point 	XBC ( 1.0  -1.0  -1.0 ) endpoint
+point 	Cx ( 0.618034  0  -1.618034 ) endpoint
+point 	XBC ( 1.0  -1.0  -1.0 ) endpoint # go back on self
+
+
+
+point 	XBZ ( 1.0  -1.0  1.0 ) endpoint
+point 	Zx ( 0.618034  0  1.618034 ) endpoint
+point 	Xb ( 1.618034  -0.618034  0 ) endpoint
+

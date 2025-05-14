@@ -1,0 +1,90 @@
+# __Figure8_simple.nom
+# 
+# CHS  2024/10/15
+#####################################################
+
+##############  surface colors   ########################### 
+
+surface W   color (0.9 0.9 0.9) endsurface   # White
+surface D   color (0.6 0.6 0.6) endsurface   # Dark
+surface K   color (0   0   0  ) endsurface   # blacK
+
+surface O  color  (0.9 0.3 0  ) endsurface   # Orange
+surface R  color  (1   0.1 0  ) endsurface   # Red
+surface G  color  (0   0.9 0  ) endsurface   # Green
+surface B  color  (0   0.3 1  ) endsurface   # Blue
+
+
+###################  Coordinate axes  ######################
+
+point ooo  ( 0 0 0 ) endpoint 
+point xoo  ( 1 0 0 ) endpoint
+point oyo  ( 0 1 0 ) endpoint
+point ooz  ( 0 0 1 ) endpoint
+
+polyline xaxis (ooo xoo) endpolyline
+polyline yaxis (ooo oyo) endpolyline
+polyline zaxis (ooo ooz) endpolyline
+
+group coord_axes   
+  instance ix xaxis surface R   endinstance     
+  instance iy yaxis surface B   endinstance
+  instance iz zaxis surface G   endinstance
+endgroup
+
+
+########   USE THESE PATH PARAMS FOR THE SIMPLE FIGURE-8 KNOT:
+
+bank p  
+    set z        0.5    0     1   0.01    # "vertical scale" 
+    set b        0.5    0     1   0.01    # "bulge_B"
+    set a        0.6    0     1   0.01    # "bulge_A"
+    set bseg    60     24   600  12       # "spline-segments"
+    set ctrad    0.05   0.01  1   0.01    # "radius of control sweep"
+    set sprad    0.1    0.01  1   0.01    # "radius of spline sweep"
+   list (  z  b  a  bseg  ctrad  sprad  )
+endbank
+
+########################   The control polygon   ##################################
+
+point p1a ( 0   2    {expr 5*$p.z} )  endpoint
+point p1b ( 2   0    {expr 5*$p.z} )  endpoint
+point p2  ( {expr 3*$p.a}   {expr -2*$p.b}   0 )  endpoint
+point p3a ( -2  0    {expr -5*$p.z})  endpoint
+point p3b ( 0   2    {expr -5*$p.z})  endpoint
+point p4  ( {expr 2*$p.b}  {expr 3*$p.a}  0 )   endpoint
+
+point p5a ( 0  -2   {expr 5*$p.z} )  endpoint
+point p5b ( -2  0   {expr 5*$p.z} )  endpoint
+point p6  ( {expr -3*$p.a}  {expr 2*$p.b}   0 )  endpoint 
+point p7a ( 2   0   {expr -5*$p.z})  endpoint
+point p7b ( 0  -2   {expr -5*$p.z})  endpoint
+point p8  ( {expr -2*$p.b}  {expr -3*$p.a}  0 )                                endpoint
+
+polyline  ctpath  ( p8  p1a p1b p2 p3a p3b p4  p5a p5b p6 p7a p7b  p8 )   endpolyline   
+
+bspline  bspath  order 4  (p7b p8 p1a p1b p2 p3a p3b p4 p5a p5b p6 p7a p7b p8 p1a)  segs {expr $p.bseg}   endbspline
+
+#################  Visualizing the paths with sweeps  ####################################################
+
+circle ctprof  ( {expr $p.ctrad}  3 )  endcircle
+circle bsprof  ( {expr $p.sprad}  9 )  endcircle
+
+###  Control polygon:
+sweep ctworm  crosssection  ctprof  endcrosssection    path ctpath  mintorsion  endpath   endsweep
+
+###  The smooth knot curve:
+sweep spworm  crosssection  bsprof  endcrosssection    path bspath  mintorsion  endpath   endsweep
+
+group assembly
+  instance  icax  coord_axes   endinstance
+
+  instance ictw ctworm    surface D   endinstance  
+  instance ispw spworm    surface O   endinstance  
+endgroup
+
+###  RENDER:
+instance ia assembly  scale (0.3 0.3 0.3)  rotate(1 0 0)(-90)  endinstance  
+
+
+#################################  END  ###########################################################

@@ -1,0 +1,33 @@
+######### BLOCKY THE SNOWMAN ############
+
+surface W  color  (1   1   1  ) endsurface   # White
+surface B  color  (0   0   0  ) endsurface   # Black
+surface O  color  (1   0.6 0  ) endsurface   # Orange
+
+sphere s (1 180 0 360 10 10) endsphere
+
+cylinder cyl (1 1 360 10) endcylinder
+
+funnel f (1 1.5 1 10) endfunnel
+
+circle c (1 50) endcircle
+
+point p1 (0 1 0) endpoint
+point p2 (1 0 0) endpoint
+point p3 (2 1 0) endpoint
+
+polyline ply (p1 p2 p3) endpolyline
+
+instance showCyl cyl scale (2 2 2) surface W endinstance
+
+instance shows s translate (0 0 3) surface W endinstance
+
+instance showf f scale (1 1 3) translate (0 0 -3) surface W endinstance
+
+instance showsmile ply scale (0.5 0.5 0.5) rotate (1 0 0) (90) translate (-0.5 1 2.5) surface B endinstance
+
+instance shownose ply scale (0.25 0.5 0.25) rotate (1 0 0) (180) translate (-0.25 1.25 3) surface O endinstance
+
+instance showc1 c scale (0.125 0.125 0.125) rotate (1 0 0) (90) translate (-0.25 1 3.5) surface B endinstance
+
+instance showc2 c scale (0.125 0.125 0.125) rotate (1 0 0) (90) translate (0.25 1 3.5) surface B endinstance

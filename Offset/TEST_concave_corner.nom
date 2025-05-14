@@ -1,0 +1,61 @@
+#####################################################
+
+surface R color (1 0 0) endsurface     # Red
+surface O color (0.9 0.6 0) endsurface # Orange
+surface Y color (1 1 0) endsurface     # Yellow
+surface L color (0.6 0.8 0) endsurface # Lime
+surface G color (0 0.9 0) endsurface   # Green
+surface A color (0 0.9 0.7) endsurface # Aqua
+surface C color (0 1 1) endsurface     # Cyan
+surface U color (0 0.5 1) endsurface   # Uniform
+surface B color (0 0 1) endsurface     # Blue
+surface P color (0.6 0 1) endsurface   # Purple
+surface M color (1 0 1) endsurface     # Magenta
+surface Z color (1 0 0.5) endsurface   # Zinnober
+
+surface W color (1 1 1) endsurface       # White
+surface D color (0.4 0.4 0.4) endsurface # Dark
+
+## These may be referenced by the offset module:
+surface oSurfOuter  color (0 0.9 0) endsurface   # Green
+surface oSurfInner  color (0 0 1) endsurface     # Blue
+surface oSurfEdges  color (1 0 0.5) endsurface   # Zinnober
+
+
+###############  Various parameters  ###########
+bank p
+  set so         0.5     0    2    0.1   ##  "shift concave vertex in x b "
+  set zbot      -1    -2    0    0.1   ##  "z-height of bot plate"
+
+  list ( so zbot )
+endbank
+
+###############  some simple geometry  #####################################
+
+mesh flat
+  point bx  ( 2  0   {expr $p.zbot} ) endpoint
+  point by  ( 0  2   {expr $p.zbot} ) endpoint
+  point ba  (-2  0   {expr $p.zbot} ) endpoint
+  point bb  ( 0 -2   {expr $p.zbot} ) endpoint
+  point bo  ( {expr  $p.so}  {expr -$p.so}  {expr $p.zbot} ) endpoint
+
+  #face bottom (by  bx    bb  ba   )  surface C  endface
+  face bottom (by  bx  bo  bb  ba   )  surface G  endface    ## For later check on concave polygons
+endmesh
+
+instance iiflat flat  endinstance
+
+###################  Now do merging, subdivision, and offsetting "in-code"  ###########################
+
+merge  mflat 
+  instance iflat flat  endinstance
+endmerge
+
+offset offset1
+    offset_type NOME_OFFSET_DEFAULT
+    height 0.1 # or use {expr $p.oThick}
+    width 0.1 # or use {expr $p.oHole}
+    instance instance1 mflat endinstance
+endoffset
+
+###########################  END  ###############################
