@@ -1,0 +1,695 @@
+#############  offset_avg_face_norm.nom  ##########################
+
+### adapted from my_Centro5_face_norm_at_vertex.nom
+#####################################################
+
+surface R color (1 0 0) endsurface     # Red
+surface O color (0.9 0.6 0) endsurface # Orange
+surface Y color (1 1 0) endsurface     # Yellow
+surface L color (0.6 0.8 0) endsurface # Lime
+surface G color (0 0.9 0) endsurface   # Green
+surface A color (0 0.9 0.7) endsurface # Aqua
+surface C color (0 1 1) endsurface     # Cyan
+surface U color (0 0.5 1) endsurface   # Uniform
+surface B color (0 0 1) endsurface     # Blue
+surface P color (0.6 0 1) endsurface   # Purple
+surface M color (1 0 1) endsurface     # Magenta
+surface Z color (1 0 0.5) endsurface   # Zinnober
+
+surface W color (1 1 1) endsurface       # White
+surface D color (0.4 0.4 0.4) endsurface # Dark
+
+### backgroundcolor (0.6 0.7 0.8) endbackgroundcolor 
+
+###############  Various parameters  ###########
+bank p
+  set p1x         1    -2    2    0.1   ##  "move corner p1"
+  set p1y         1     0    2    0.1   ## 
+  set p1z         0    -1    1    0.1   ##  
+
+  set p2x        -1    -2    0    0.1   ##  "move corner p2"
+  set p2y         1     0    2    0.1   ## 
+  set p2z         0    -1    1    0.1   ##  
+
+  set p3x        -1    -2    0    0.1   ##  "move corner p3"
+  set p3y        -1     0    2    0.1   ## 
+  set p3z         0    -1    1    0.1   ##  
+
+  set p4x         1    -2    2    0.1   ##  "move corner p4"
+  set p4y        -1     0    2    0.1   ## 
+  set p4z         0    -1    1    0.1   ##  
+
+  set p5x         0.6   0    2    0.1   ##  "shift concave vertex"
+  set p5y         0     0    2    0.1   ## 
+  set p5z         0    -1    1    0.1   ##  
+
+  set pcz         0.7   0    1    0.1   ##  "shift centroid z to make pyramid"
+
+  set ot          0.5  0.1   3    0.1   ## "offset thickness"
+
+ list ( p1x p1y p1z  p2x p2y p2z  p3x p3y p3z  p4x p4y p4z  p5x p5y p5z  pcz  ot  )
+endbank
+
+###############  a polygon with 5 corners  #####################################
+
+point p1  ( {expr $p.p1x}  {expr $p.p1y}  {expr $p.p1z} ) endpoint
+point p2  ( {expr $p.p2x}  {expr $p.p2y}  {expr $p.p2z} ) endpoint
+point p3  ( {expr $p.p3x}  {expr $p.p3y}  {expr $p.p3z} ) endpoint
+point p4  ( {expr $p.p4x}  {expr $p.p4y}  {expr $p.p4z} ) endpoint
+point p5  ( {expr $p.p5x}  {expr $p.p5y}  {expr $p.p5z} ) endpoint
+ 
+polyline  pgon5  ( p1 p2 p3 p4 p5 p1 )  endpolyline
+instance ipgon5  pgon5   surface R   endinstance
+
+### point c5  ( 0 0 0 ) endpoint  ##  default test
+### the reaL CENTROID
+### this case only works if the extra point is not in line with the polygon's vertices bc otherwise centroid should be (0, 0, 0)
+point c5  ( {expr 0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)}  
+            {expr 0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)}  
+            {expr 0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz} 
+          ) endpoint
+
+mesh pface
+  face  pf1  ( c5  p1 p2 )  surface R  endface
+  face  pf2  ( c5  p2 p3 )  surface G  endface
+  face  pf3  ( c5  p3 p4 )  surface B  endface
+  face  pf4  ( c5  p4 p5 )  surface M  endface
+  face  pf5  ( c5  p5 p1 )  surface Y  endface
+endmesh
+
+### # render colored star triangle faces
+### instance ipface  pface     endinstance  ## RENDER
+
+############################## normal vector ##############################
+### # compute cross product for each triangle to get normal vector
+### # in each component it is: (pf1 + pf2 + pf3 + pf4 + pf5) * 0.1 as naiive way of normalizing
+point norm  (
+    {expr (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))
+        + ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))
+        + ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))
+        + ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))
+        + ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))
+        * 0.3
+    }  
+    
+    {expr (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3x + $p.p4x + $p.p5z)))
+        + ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))
+        + ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))
+        + ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))
+        + ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))
+        * 0.3
+    }  
+    
+    {expr (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        * 0.3
+    } 
+) endpoint
+
+polyline normVec (c5 norm) endpolyline
+circle profile ( 0.025  8 )  endcircle
+
+sweep vec
+    crosssection  profile endcrosssection
+    path normVec endpath   
+endsweep
+   
+### instance iNormVec vec  surface R   endinstance
+
+### add extra z shift of centroid to just z of centroid point
+### Normal Vector of Yellow Face, P1
+point normY  ( 
+    ### 0 1.4 2
+    {expr (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+### add xyz coords of the new vertex to get normal at different location on same plane
+point normY_p1 (
+    ### 1 2.4 2
+    {expr $p.p1x + (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p1y + (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p1z + (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+point normY_p2 (
+    ### -1 2.4 2
+    {expr $p.p2x + (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p2y + (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p2z + (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+polyline normVecY (c5 normY) endpolyline
+polyline normVecY2 (p1 normY_p1) endpolyline
+polyline normVecY3 (p2 normY_p2) endpolyline
+
+sweep vecY
+    crosssection  profile endcrosssection
+    path normVecY endpath   
+endsweep
+sweep vecY2
+    crosssection  profile endcrosssection
+    path normVecY2 endpath   
+endsweep
+sweep vecY3
+    crosssection  profile endcrosssection
+    path normVecY3 endpath   
+endsweep
+
+### instance iNormVecY vecY surface Y   endinstance
+### instance iNormVecY2 vecY2  surface Y   endinstance
+### instance iNormVecY3 vecY3  surface Y   endinstance
+
+### Normal Vector of Orange Face, P2
+point normO  ( 
+    ### -1.4 0 2.24
+    {expr (($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr (($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr (($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+point normO_p2 (
+    ### -2.4 1 2.24
+    {expr $p.p2x + (($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p2y + (($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p2z + (($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+point normO_p3 (
+    ### -2.4 -1 2.24
+    {expr $p.p3x + (($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p3y + (($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p3z + (($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+polyline normVecO (c5 normO) endpolyline
+polyline normVecO2 (p2 normO_p2) endpolyline
+polyline normVecO3 (p3 normO_p3) endpolyline
+
+sweep vecO
+    crosssection  profile endcrosssection
+    path normVecO endpath   
+endsweep
+sweep vecO2
+    crosssection  profile endcrosssection
+    path normVecO2 endpath   
+endsweep
+sweep vecO3
+    crosssection  profile endcrosssection
+    path normVecO3 endpath   
+endsweep
+
+### instance iNormVecO vecO  surface O   endinstance
+### instance iNormVecO2 vecO2  surface O   endinstance
+### instance iNormVecO3 vecO3  surface O   endinstance
+
+#########################################################################
+### Average Normal Vectors at P2
+### Yellow + Orange
+point normP2  ( 
+    {expr ($p.p2x + (($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))) 
+    + $p.p2x + (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))) / 2    
+    }  
+
+    {expr ($p.p2y + (($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))
+    + $p.p2y + (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))) /2    }  
+
+    {expr ($p.p2z + (($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+    + $p.p2z + (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2    } 
+
+) endpoint
+
+polyline normVecP2 (p2 normP2) endpolyline
+
+sweep vecP2
+    crosssection  profile endcrosssection
+    path normVecP2 endpath   
+endsweep
+
+### instance iNormVecP2 vecP2  surface R   endinstance
+#########################################################################
+
+### Normal Vector of Magenta Face, P3
+point normM  ( 
+    ### 0 -1.4 2
+    {expr (($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr (($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr (($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+point normM_p3  ( 
+    {expr $p.p3x + (($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p3y + (($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p3z + (($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+point normM_p4  ( 
+    {expr $p.p4x + (($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p4y + (($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p4z + (($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+polyline normVecM (c5 normM) endpolyline
+polyline normVecM2 (p3 normM_p3) endpolyline
+polyline normVecM3 (p4 normM_p4) endpolyline
+
+sweep vecM
+    crosssection  profile endcrosssection
+    path normVecM endpath   
+endsweep
+sweep vecM2
+    crosssection  profile endcrosssection
+    path normVecM2 endpath   
+endsweep
+sweep vecM3
+    crosssection  profile endcrosssection
+    path normVecM3 endpath   
+endsweep
+
+### instance iNormVecM vecM  surface M   endinstance
+### instance iNormVecM2 vecM2  surface M   endinstance
+### instance iNormVecM3 vecM3  surface M   endinstance
+
+#########################################################################
+### Average Normal Vectors at P3
+### Orange + Magenta
+point normP3  ( 
+    {expr ($p.p3x + (($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))
+        + $p.p3x + (($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2    }  
+
+    {expr ($p.p3y + (($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))) 
+        + $p.p3y + (($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2    }  
+
+    {expr ($p.p3z + (($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p3z + (($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2    } 
+
+) endpoint
+
+polyline normVecP3 (p3 normP3) endpolyline
+
+sweep vecP3
+    crosssection  profile endcrosssection
+    path normVecP3 endpath   
+endsweep
+
+### instance iNormVecP3 vecP3  surface R   endinstance
+#########################################################################
+
+### Normal Vector of Cyan Face, P4
+point normC  ( 
+    ### 0.7 0.28 0.48
+    {expr (($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr (($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr (($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+point normC_p4  ( 
+    {expr $p.p4x + (($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p4y + (($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p4z + (($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+point normC_p5  ( 
+    {expr $p.p5x + (($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p5y + (($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p5z + (($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+polyline normVecC (c5 normC) endpolyline
+polyline normVecC2 (p4 normC_p4) endpolyline
+polyline normVecC3 (p5 normC_p5) endpolyline
+
+sweep vecC
+    crosssection  profile endcrosssection
+    path normVecC endpath   
+endsweep
+sweep vecC2
+    crosssection  profile endcrosssection
+    path normVecC2 endpath   
+endsweep
+sweep vecC3
+    crosssection  profile endcrosssection
+    path normVecC3 endpath   
+endsweep
+
+### instance iNormVecC vecC  surface C   endinstance
+### instance iNormVecC2 vecC2  surface C   endinstance
+### instance iNormVecC3 vecC3  surface C   endinstance
+
+#########################################################################
+### Average Normal Vectors at P4
+### Magenta + Cyan
+point normP4  ( 
+    {expr ($p.p4x + (($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))) 
+        + $p.p4x + (($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2    }  
+
+    {expr ($p.p4y + (($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))  
+        + $p.p4y + (($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2    }  
+
+    {expr ($p.p4z + (($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p4z + (($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2    } 
+) endpoint
+
+polyline normVecP4 (p4 normP4) endpolyline
+
+sweep vecP4
+    crosssection  profile endcrosssection
+    path normVecP4 endpath   
+endsweep
+
+### instance iNormVecP4 vecP4  surface R   endinstance
+#########################################################################
+
+### Normal Vector of Lime Face, P5
+point normL  ( 
+    ### 0.7 -0.28 0.48
+    {expr (($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr (($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr (($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+point normL_p5  ( 
+    {expr $p.p5x + (($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p5y + (($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p5z + (($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+point normL_p0  ( 
+    {expr $p.p1x + (($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))    }  
+    {expr $p.p1y + (($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))    }  
+    {expr $p.p1z + (($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))    } 
+) endpoint
+
+polyline normVecL (c5 normL) endpolyline
+polyline normVecL2 (p5 normL_p5) endpolyline
+polyline normVecL3 (p1 normL_p0) endpolyline
+
+sweep vecL
+    crosssection  profile endcrosssection
+    path normVecL endpath   
+endsweep
+sweep vecL2
+    crosssection  profile endcrosssection
+    path normVecL2 endpath   
+endsweep
+sweep vecL3
+    crosssection  profile endcrosssection
+    path normVecL3 endpath   
+endsweep
+
+### instance iNormVecL vecL  surface L   endinstance
+### instance iNormVecL2 vecL2  surface L   endinstance
+### instance iNormVecL3 vecL3  surface L   endinstance
+
+#########################################################################
+### Average Normal Vectors at P5
+### Cyan + Lime
+point normP5  ( 
+    {expr ($p.p5x + (($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))   
+        + $p.p5x + (($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2    }  
+
+    {expr ($p.p5y + (($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))  
+        + $p.p5y + (($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2    }  
+
+    {expr ($p.p5z + (($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p5z + (($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2    } 
+
+) endpoint
+
+polyline normVecP5 (p5 normP5) endpolyline
+
+sweep vecP5
+    crosssection  profile endcrosssection
+    path normVecP5 endpath   
+endsweep
+
+### instance iNormVecP5 vecP5  surface R   endinstance
+#########################################################################
+
+#########################################################################
+### Average Normal Vectors at P1
+### Lime + Yellow
+point normP1  ( 
+    {expr ($p.p1x + (($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))   
+        + $p.p1x + (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2    }  
+
+    {expr ($p.p1y + (($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))     
+        + $p.p1y + (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2    }  
+
+    {expr ($p.p1z + (($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p1z + (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2    } 
+
+) endpoint
+
+polyline normVecP1 (p1 normP1) endpolyline
+
+sweep vecP1
+    crosssection  profile endcrosssection
+    path normVecP1 endpath   
+endsweep
+
+### instance iNormVecP1 vecP1  surface R   endinstance
+
+#########################################################################
+#########################################################################
+#########################################################################
+### issue: normal vecs not normalized so different offset lengths
+############################## offset top face ##############################
+### ## render top offset face in direction of +normal
+### # each component: normal vector * 0.1 naiive normalization * 1/2 the offset + original point
+point newc (
+    {expr (($p.p1y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p2y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p2y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))
+        + ($p.p3y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p4y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p4y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p5y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p5y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p1y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        * 0.1 * 0.5*$p.ot + 0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)
+    }  
+    
+    {expr (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p2x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z)))
+        + ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p3x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z)))
+        + ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p4x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z)))
+        + ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p5x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z)))
+        + ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p1x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))))
+        * 0.1 * 0.5*$p.ot + 0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)
+    }  
+    
+    {expr (($p.p1x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p2y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x)))
+        + ($p.p2x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p3y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x)))
+        + ($p.p3x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p4y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x)))
+        + ($p.p4x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p5y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x)))
+        + ($p.p5x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p1y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))))
+        * 0.1 * 0.5*$p.ot + 0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz
+    } 
+) endpoint
+
+point newp1 (
+    {expr ($p.p1x + (($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))   
+        + $p.p1x + (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2
+        * 0.1 * 0.5*$p.ot + $p.p1x }  
+
+    {expr ($p.p1y + (($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))     
+        + $p.p1y + (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2
+        * 0.1 * 0.5*$p.ot + $p.p1y }  
+
+    {expr ($p.p1z + (($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p1z + (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot + $p.p1z } 
+) endpoint
+
+point newp2 (
+    {expr ($p.p2x + (($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))) 
+        + $p.p2x + (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))) / 2    
+        * 0.1 * 0.5*$p.ot + $p.p2x }  
+
+    {expr ($p.p2y + (($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))
+        + $p.p2y + (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))) /2
+        * 0.1 * 0.5*$p.ot + $p.p2y }  
+
+    {expr ($p.p2z + (($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p2z + (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot + $p.p2z } 
+) endpoint
+
+point newp3 (
+    {expr ($p.p3x + (($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))
+        + $p.p3x + (($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2
+        * 0.1 * 0.5*$p.ot + $p.p3x }  
+
+    {expr ($p.p3y + (($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))) 
+        + $p.p3y + (($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2
+        * 0.1 * 0.5*$p.ot + $p.p3y }  
+
+    {expr ($p.p3z + (($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p3z + (($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot + $p.p3z } 
+) endpoint
+
+point newp4 (
+    {expr ($p.p4x + (($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))) 
+        + $p.p4x + (($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2
+        * 0.1 * 0.5*$p.ot + $p.p4x }  
+
+    {expr ($p.p4y + (($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))  
+        + $p.p4y + (($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2
+        * 0.1 * 0.5*$p.ot + $p.p4y }  
+
+    {expr ($p.p4z + (($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p4z + (($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot + $p.p4z } 
+) endpoint
+
+point newp5 (
+    {expr ($p.p5x + (($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))   
+        + $p.p5x + (($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2
+        * 0.1 * 0.5*$p.ot + $p.p5x }  
+
+    {expr ($p.p5y + (($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))  
+        + $p.p5y + (($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2
+        * 0.1 * 0.5*$p.ot + $p.p5y }  
+
+    {expr ($p.p5z + (($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p5z + (($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot + $p.p5z } 
+) endpoint
+
+mesh tface
+  face  pf1  ( newc  newp1 newp2 )  surface R  endface
+  face  pf2  ( newc  newp2 newp3 )  surface G  endface
+  face  pf3  ( newc  newp3 newp4 )  surface B  endface
+  face  pf4  ( newc  newp4 newp5 )  surface M  endface
+  face  pf5  ( newc  newp5 newp1 )  surface Y  endface
+endmesh
+
+merge merge_tface
+    instance itface tface endinstance
+endmerge
+
+### instance imerge_tface  merge_tface vertexnormal 1.0   endinstance  ## RENDER
+instance imerge_tface  merge_tface  endinstance  ## RENDER
+
+############################## offset bottom face ##############################
+### ## render bottom offset face in direction of -normal
+### # each component: -(normal vector * 0.1 naiive normalization * 1/2 the offset) + original point
+point bnewc (
+    {expr -1 * ((($p.p1y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p2y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p2y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))
+        + ($p.p3y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p4y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p4y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p5y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))
+        + ($p.p5y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p1y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        * 0.1 * 0.5*$p.ot) + 0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)
+    }  
+    
+    {expr -1 * ((($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p2x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z)))
+        + ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p3x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z)))
+        + ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p4x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z)))
+        + ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p5x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z)))
+        + ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))) * ($p.p1x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z))))
+        * 0.1 * 0.5*$p.ot) + 0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)
+    }  
+    
+    {expr -1 * ((($p.p1x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p2y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x)))
+        + ($p.p2x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p3y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x)))
+        + ($p.p3x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p4y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x)))
+        + ($p.p4x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p5y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x)))
+        + ($p.p5x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))) * ($p.p1y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5y - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1x - (0.2*($p.p1x + $p.p2x - 1 + 1 + $p.p5x))))
+        * 0.1 * 0.5*$p.ot) + 0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz
+    } 
+) endpoint
+
+point bnewp1 (
+    {expr -1 * (($p.p1x + (($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))   
+        + $p.p1x + (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p1x }  
+
+    {expr -1 * (($p.p1y + (($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))     
+        + $p.p1y + (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p1y }  
+
+    {expr -1 * (($p.p1z + (($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p1z + (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p1z } 
+) endpoint
+
+point bnewp2 (
+    {expr -1 * (($p.p2x + (($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))) 
+        + $p.p2x + (($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))) / 2    
+        * 0.1 * 0.5*$p.ot) + $p.p2x }  
+
+    {expr -1 * (($p.p2y + (($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))
+        + $p.p2y + (($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))) /2
+        * 0.1 * 0.5*$p.ot) + $p.p2y }  
+
+    {expr -1 * (($p.p2z + (($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p2z + (($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p2z } 
+) endpoint
+
+point bnewp3 (
+    {expr -1 * (($p.p3x + (($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))
+        + $p.p3x + (($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p3x }  
+
+    {expr -1 * (($p.p3y + (($p.p2z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))) 
+        + $p.p3y + (($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p3y }  
+
+    {expr -1 * (($p.p3z + (($p.p2x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p2y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p3z + (($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p3z } 
+) endpoint
+
+point bnewp4 (
+    {expr -1 * (($p.p4x + (($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))) 
+        + $p.p4x + (($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p4x }  
+
+    {expr -1 * (($p.p4y + (($p.p3z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))  
+        + $p.p4y + (($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p4y }  
+
+    {expr -1 * (($p.p4z + (($p.p3x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p3y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p4z + (($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p4z } 
+) endpoint
+
+point bnewp5 (
+    {expr -1 * (($p.p5x + (($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))))   
+        + $p.p5x + (($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) - ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y)))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p5x }  
+
+    {expr -1 * (($p.p5y + (($p.p4z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)))  
+        + $p.p5y + (($p.p5z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz)) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) - ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1z - (0.2*($p.p1z + $p.p2z + $p.p3z + $p.p4z + $p.p5z) + $p.pcz))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p5y }  
+
+    {expr -1 * (($p.p5z + (($p.p4x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p4y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))))
+        + $p.p5z + (($p.p5x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x))) * ($p.p1y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) - ($p.p5y - (0.2*($p.p1y + $p.p2y + $p.p3y + $p.p4y + $p.p5y))) * ($p.p1x - (0.2*($p.p1x + $p.p2x + $p.p3x + $p.p4x + $p.p5x)))))/2
+        * 0.1 * 0.5*$p.ot) + $p.p5z } 
+) endpoint
+
+mesh bface
+  face  pf1  ( bnewp1 bnewc   bnewp2 )  surface R  endface
+  face  pf2  ( bnewp2 bnewc   bnewp3 )  surface G  endface
+  face  pf3  ( bnewp3 bnewc   bnewp4 )  surface B  endface
+  face  pf4  ( bnewp4 bnewc   bnewp5 )  surface M  endface
+  face  pf5  ( bnewp5 bnewc   bnewp1 )  surface Y  endface
+endmesh
+
+instance ibface  bface     endinstance  ## RENDER
+
+############################## form border faces ##############################
+
+mesh brfaces
+  face  brpf1  ( newp1 bnewp1 bnewp2 newp2 )  surface R  endface
+  face  brpf2  ( newp2 bnewp2 bnewp3 newp3 )  surface G  endface
+  face  brpf3  ( newp3 bnewp3 bnewp4 newp4 )  surface B  endface
+  face  brpf4  ( newp4 bnewp4 bnewp5 newp5 )  surface M  endface
+  face  brpf5  ( newp5 bnewp5 bnewp1 newp1 )  surface Y  endface
+endmesh
+
+### comment out border faces to better see offset faces
+instance ibrface  brfaces     endinstance  ## RENDER
